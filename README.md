@@ -1,0 +1,1 @@
+# JurnalAI1.0
