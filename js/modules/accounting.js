@@ -194,163 +194,172 @@ class AccountingCalculator {
   }
 
   /**
-   * Suggest account classification with enhanced logic
+   * Get double-entry classification (debit + credit pair) for a transaction
+   * Follows PSAK/Indonesian accounting standards
    * @param {string} description - Transaction description
    * @param {array} chartOfAccounts - Chart of accounts
-   * @returns {object} Classification suggestion
+   * @returns {object} {debitAccount, creditAccount, confidence, reasoning}
    */
-  suggestAccountClassification(description, chartOfAccounts) {
+  getDoubleEntryClassification(description, chartOfAccounts) {
     const lowerDesc = description.toLowerCase();
-    
-    // Enhanced keyword mapping with better categorization
-    // Order matters - check more specific keywords first
-    const keywordMap = {
-      // Payable/Hutang (2000) - MUST CHECK FIRST before Expense
-      '2000': {
-        keywords: ['hutang', 'utang', 'payable', 'payables', 'hutang usaha', 'hutang_usaha'],
-        confidence: 0.95
-      },
-      
-      // Debt/Pinjaman (2100)
-      '2100': {
-        keywords: ['pinjaman', 'loan', 'kredit', 'cicilan'],
-        confidence: 0.95
-      },
-      
-      // Salary/Gaji (5100) - CHECK BEFORE general expense
-      '5100': {
-        keywords: ['gaji', 'upah', 'honor', 'salary', 'wage', 'bayar karyawan', 'tunjangan', 'bebangaji', 'beban_gaji'],
-        confidence: 0.95
-      },
-      
-      // Interest/Bunga (5800) - CHECK BEFORE general expense
-      '5800': {
-        keywords: ['bunga', 'interest', 'riba', 'bunga_bank', 'beban_bunga'],
-        confidence: 0.95
-      },
-      
-      // Rent/Sewa (5200)
-      '5200': {
-        keywords: ['sewa', 'rental', 'rent', 'kos', 'tempat', 'ruang'],
-        confidence: 0.9
-      },
-      
-      // Utilities/Listrik (5300)
-      '5300': {
-        keywords: ['listrik', 'air', 'internet', 'telepon', 'wifi', 'pulsa', 'token',
-                   'utilitas', 'utilities', 'pln', 'pam', 'beban_listrik', 'beban_air'],
-        confidence: 0.9
-      },
-      
-      // Depreciation/Penyusutan (5500)
-      '5500': {
-        keywords: ['penyusutan', 'depreciation', 'depresiasi'],
-        confidence: 0.95
-      },
-      
-      // Insurance/Asuransi (5600)
-      '5600': {
-        keywords: ['asuransi', 'insurance', 'premi'],
-        confidence: 0.9
-      },
-      
-      // Marketing/Pemasaran (5700)
-      '5700': {
-        keywords: ['marketing', 'pemasaran', 'iklan', 'promosi', 'advertise', 'ads'],
-        confidence: 0.9
-      },
-      
-      // Equipment/Peralatan (1800) - CHECK BEFORE general supplies
-      '1800': {
-        keywords: ['komputer', 'laptop', 'printer', 'meja', 'kursi', 'lemari', 'rak',
-                   'mobil', 'motor', 'kendaraan', 'furniture', 'peralatan', 'equipment',
-                   'mesin', 'ac', 'kulkas', 'dispenser', 'meja kerja', 'kursi kerja'],
-        confidence: 0.9
-      },
-      
-      // Supplies/Perlengkapan (5400) - CHECK LAST as fallback
-      '5400': {
-        keywords: ['pulpen', 'kertas', 'tinta', 'sticky', 'penghapus', 'penggaris', 
-                   'stapler', 'klip', 'map', 'amplop', 'buku tulis', 'pensil', 'spidol',
-                   'perlengkapan', 'supplies', 'alat tulis', 'kantor', 'buku'],
-        confidence: 0.9
-      },
-      
-      // Inventory (1200)
-      '1200': {
-        keywords: ['barang', 'stok', 'inventory', 'persediaan', 'dagangan'],
-        confidence: 0.85
-      },
-      
-      // Bank (1010)
-      '1010': {
-        keywords: ['bank', 'rekening', 'transfer', 'deposit'],
-        confidence: 0.9
-      },
-      
-      // Cash (1000)
-      '1000': {
-        keywords: ['tunai', 'cash', 'uang', 'kas'],
-        confidence: 0.9
-      }
+
+    // Helper to find account by code
+    const findAccount = (code) => {
+      const acc = chartOfAccounts.find(a => a.code === code);
+      return acc || { code, name: code, type: 'Asset' };
     };
 
-    // Find best matching account
-    // Check in order of priority (more specific first)
-    let bestMatch = { code: '5400', confidence: 0.3 }; // Default to Miscellaneous Expense
-    
-    // Priority order: check most specific keywords first
-    const priorityOrder = ['2000', '2100', '5100', '5800', '5200', '5300', '5500', '5600', '5700', '1800', '5400', '1200', '1010', '1000'];
-    
-    for (const code of priorityOrder) {
-      const data = keywordMap[code];
-      if (!data) continue;
-      
-      for (const keyword of data.keywords) {
+    // Default offset is Kas (1000)
+    const kas = findAccount('1000');
+
+    // Double-entry pattern rules (ordered by specificity)
+    const patterns = [
+      // Modal awal / investasi pemilik → Debit Kas, Kredit Modal
+      {
+        keywords: ['modal', 'investasi', 'setoran', 'modal_awal', 'modal_usaha'],
+        debit: '1000', credit: '3000',
+        reasoning: 'Setoran modal: Kas bertambah (Debit), Modal Pemilik bertambah (Kredit)',
+        confidence: 0.97
+      },
+      // Prive / penarikan pemilik → Debit Prive, Kredit Kas
+      {
+        keywords: ['prive', 'penarikan', 'ambil_uang', 'withdraw'],
+        debit: '3100', credit: '1000',
+        reasoning: 'Prive: Prive bertambah (Debit), Kas berkurang (Kredit)',
+        confidence: 0.95
+      },
+      // Pendapatan tunai → Debit Kas, Kredit Pendapatan
+      {
+        keywords: ['pendapatan', 'jasa', 'revenue', 'penjualan', 'service', 'terima_pembayaran', 'bayar_jasa'],
+        debit: '1000', credit: '4000',
+        reasoning: 'Pendapatan jasa tunai: Kas bertambah (Debit), Pendapatan bertambah (Kredit)',
+        confidence: 0.95
+      },
+      // Piutang usaha → Debit Piutang, Kredit Pendapatan
+      {
+        keywords: ['piutang', 'receivable', 'kredit_jasa', 'jasa_kredit'],
+        debit: '1100', credit: '4000',
+        reasoning: 'Piutang usaha: Piutang bertambah (Debit), Pendapatan bertambah (Kredit)',
+        confidence: 0.93
+      },
+      // Beli peralatan tunai → Debit Peralatan, Kredit Kas
+      {
+        keywords: ['komputer', 'laptop', 'printer', 'meja', 'kursi', 'lemari', 'rak',
+                   'mobil', 'motor', 'kendaraan', 'furniture', 'peralatan', 'equipment',
+                   'mesin', 'ac', 'kulkas', 'dispenser', 'beli_peralatan'],
+        debit: '1800', credit: '1000',
+        reasoning: 'Pembelian peralatan tunai: Peralatan bertambah (Debit), Kas berkurang (Kredit)',
+        confidence: 0.92
+      },
+      // Bayar gaji → Debit Beban Gaji, Kredit Kas
+      {
+        keywords: ['gaji', 'upah', 'honor', 'salary', 'wage', 'beban_gaji', 'bayar_gaji'],
+        debit: '5100', credit: '1000',
+        reasoning: 'Beban gaji: Beban Gaji bertambah (Debit), Kas berkurang (Kredit)',
+        confidence: 0.97
+      },
+      // Bayar sewa → Debit Beban Sewa, Kredit Kas
+      {
+        keywords: ['sewa', 'rental', 'rent', 'beban_sewa', 'bayar_sewa'],
+        debit: '5200', credit: '1000',
+        reasoning: 'Beban sewa: Beban Sewa bertambah (Debit), Kas berkurang (Kredit)',
+        confidence: 0.95
+      },
+      // Bayar listrik/utilitas → Debit Beban Listrik, Kredit Kas
+      {
+        keywords: ['listrik', 'air', 'internet', 'telepon', 'wifi', 'pulsa', 'token',
+                   'pln', 'pam', 'beban_listrik', 'utilitas'],
+        debit: '5300', credit: '1000',
+        reasoning: 'Beban utilitas: Beban Listrik/Air bertambah (Debit), Kas berkurang (Kredit)',
+        confidence: 0.95
+      },
+      // Beli perlengkapan tunai → Debit Beban Perlengkapan, Kredit Kas
+      {
+        keywords: ['pulpen', 'kertas', 'tinta', 'sticky', 'penghapus', 'penggaris',
+                   'stapler', 'klip', 'amplop', 'pensil', 'spidol', 'alat_tulis',
+                   'perlengkapan', 'supplies', 'atk', 'buku_tulis'],
+        debit: '5400', credit: '1000',
+        reasoning: 'Beban perlengkapan: Beban Perlengkapan bertambah (Debit), Kas berkurang (Kredit)',
+        confidence: 0.92
+      },
+      // Bayar asuransi → Debit Beban Asuransi, Kredit Kas
+      {
+        keywords: ['asuransi', 'insurance', 'premi'],
+        debit: '5600', credit: '1000',
+        reasoning: 'Beban asuransi: Beban Asuransi bertambah (Debit), Kas berkurang (Kredit)',
+        confidence: 0.93
+      },
+      // Bayar marketing → Debit Beban Marketing, Kredit Kas
+      {
+        keywords: ['marketing', 'iklan', 'promosi', 'advertise', 'ads'],
+        debit: '5700', credit: '1000',
+        reasoning: 'Beban pemasaran: Beban Marketing bertambah (Debit), Kas berkurang (Kredit)',
+        confidence: 0.92
+      },
+      // Bayar bunga → Debit Beban Bunga, Kredit Kas
+      {
+        keywords: ['bunga', 'interest', 'beban_bunga'],
+        debit: '5800', credit: '1000',
+        reasoning: 'Beban bunga: Beban Bunga bertambah (Debit), Kas berkurang (Kredit)',
+        confidence: 0.95
+      },
+      // Hutang usaha (beli kredit) → Debit Aset/Beban, Kredit Hutang
+      {
+        keywords: ['hutang', 'utang', 'kredit_beli', 'beli_kredit', 'payable'],
+        debit: '5400', credit: '2000',
+        reasoning: 'Pembelian kredit: Beban/Aset bertambah (Debit), Utang Usaha bertambah (Kredit)',
+        confidence: 0.88
+      },
+      // Pinjaman bank → Debit Kas, Kredit Utang Bank
+      {
+        keywords: ['pinjaman', 'loan', 'kredit_bank', 'pinjam'],
+        debit: '1000', credit: '2100',
+        reasoning: 'Pinjaman bank: Kas bertambah (Debit), Utang Bank bertambah (Kredit)',
+        confidence: 0.95
+      },
+      // Beli persediaan/barang dagangan → Debit Persediaan, Kredit Kas
+      {
+        keywords: ['barang', 'stok', 'inventory', 'persediaan', 'dagangan', 'beli_barang'],
+        debit: '1200', credit: '1000',
+        reasoning: 'Pembelian persediaan: Persediaan bertambah (Debit), Kas berkurang (Kredit)',
+        confidence: 0.88
+      }
+    ];
+
+    // Find matching pattern
+    for (const pattern of patterns) {
+      for (const keyword of pattern.keywords) {
         if (lowerDesc.includes(keyword)) {
-          bestMatch = { code, confidence: data.confidence };
-          break; // Found a match, stop searching
+          return {
+            debitAccount: findAccount(pattern.debit),
+            creditAccount: findAccount(pattern.credit),
+            confidence: pattern.confidence,
+            reasoning: pattern.reasoning
+          };
         }
       }
-      
-      // If we found a match, stop checking other codes
-      if (bestMatch.code !== '5400' || bestMatch.confidence > 0.3) {
-        break;
-      }
     }
 
-    // Find account in chart of accounts
-    let account = chartOfAccounts.find(a => a.code === bestMatch.code);
-    
-    if (!account) {
-      if (chartOfAccounts && chartOfAccounts.length > 0) {
-        account = chartOfAccounts[0];
-      } else {
-        account = {
-          code: bestMatch.code,
-          name: 'Miscellaneous Expense',
-          type: 'Expense'
-        };
-      }
-    }
-
-    const debitCredit = this.getDefaultDebitCredit(account.type);
-
-    console.log('Classification:', {
-      description: lowerDesc,
-      suggestedCode: bestMatch.code,
-      accountName: account.name,
-      accountType: account.type,
-      debitCredit: debitCredit,
-      confidence: bestMatch.confidence
-    });
-
+    // Default fallback: treat as expense paid in cash
     return {
-      accountCode: account.code,
-      accountName: account.name,
-      accountType: account.type,
-      debitCredit: debitCredit,
-      confidence: bestMatch.confidence
+      debitAccount: findAccount('5900'), // Other Expenses
+      creditAccount: kas,
+      confidence: 0.5,
+      reasoning: 'Tidak dikenali, diasumsikan sebagai beban lain-lain dibayar tunai'
+    };
+  }
+
+  /**
+   * Suggest account classification (legacy single-entry, kept for compatibility)
+   */
+  suggestAccountClassification(description, chartOfAccounts) {
+    const result = this.getDoubleEntryClassification(description, chartOfAccounts);
+    return {
+      accountCode: result.debitAccount.code,
+      accountName: result.debitAccount.name,
+      accountType: result.debitAccount.type,
+      debitCredit: 'debit',
+      confidence: result.confidence
     };
   }
 }

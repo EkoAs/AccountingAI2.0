@@ -209,47 +209,36 @@ class AuthManager {
    */
   getDefaultChartOfAccounts() {
     return [
-      // ASSETS (1000-1999)
-      { code: '1000', name: 'Cash', type: 'Asset', category: 'Current Asset', balance: 0 },
-      { code: '1010', name: 'Bank Account', type: 'Asset', category: 'Current Asset', balance: 0 },
-      { code: '1100', name: 'Accounts Receivable', type: 'Asset', category: 'Current Asset', balance: 0 },
-      { code: '1200', name: 'Inventory', type: 'Asset', category: 'Current Asset', balance: 0 },
-      { code: '1500', name: 'Supplies', type: 'Asset', category: 'Current Asset', balance: 0 },
-      { code: '1600', name: 'Prepaid Expenses', type: 'Asset', category: 'Current Asset', balance: 0 },
-      { code: '1800', name: 'Equipment', type: 'Asset', category: 'Fixed Asset', balance: 0 },
-      { code: '1810', name: 'Accumulated Depreciation', type: 'Asset', category: 'Fixed Asset', balance: 0 },
-      { code: '1900', name: 'Intangible Assets', type: 'Asset', category: 'Fixed Asset', balance: 0 },
-
-      // LIABILITIES (2000-2999)
-      { code: '2000', name: 'Accounts Payable', type: 'Liability', category: 'Current Liability', balance: 0 },
-      { code: '2100', name: 'Short-term Debt', type: 'Liability', category: 'Current Liability', balance: 0 },
-      { code: '2200', name: 'Accrued Expenses', type: 'Liability', category: 'Current Liability', balance: 0 },
-      { code: '2300', name: 'Unearned Revenue', type: 'Liability', category: 'Current Liability', balance: 0 },
-      { code: '2500', name: 'Long-term Debt', type: 'Liability', category: 'Long-term Liability', balance: 0 },
-      { code: '2600', name: 'Deferred Tax Liability', type: 'Liability', category: 'Long-term Liability', balance: 0 },
-
-      // EQUITY (3000-3999)
-      { code: '3000', name: 'Common Stock', type: 'Equity', category: 'Equity', balance: 0 },
-      { code: '3100', name: 'Retained Earnings', type: 'Equity', category: 'Equity', balance: 0 },
-      { code: '3200', name: 'Dividends', type: 'Equity', category: 'Equity', balance: 0 },
-
-      // REVENUE (4000-4999)
-      { code: '4000', name: 'Sales Revenue', type: 'Revenue', category: 'Operating Revenue', balance: 0 },
-      { code: '4100', name: 'Service Revenue', type: 'Revenue', category: 'Operating Revenue', balance: 0 },
-      { code: '4200', name: 'Interest Income', type: 'Revenue', category: 'Non-Operating Revenue', balance: 0 },
-      { code: '4300', name: 'Other Income', type: 'Revenue', category: 'Non-Operating Revenue', balance: 0 },
-
-      // EXPENSES (5000-5999)
-      { code: '5000', name: 'Cost of Goods Sold', type: 'Expense', category: 'Operating Expense', balance: 0 },
-      { code: '5100', name: 'Salaries and Wages', type: 'Expense', category: 'Operating Expense', balance: 0 },
-      { code: '5200', name: 'Rent Expense', type: 'Expense', category: 'Operating Expense', balance: 0 },
-      { code: '5300', name: 'Utilities Expense', type: 'Expense', category: 'Operating Expense', balance: 0 },
-      { code: '5400', name: 'Office Supplies Expense', type: 'Expense', category: 'Operating Expense', balance: 0 },
-      { code: '5500', name: 'Depreciation Expense', type: 'Expense', category: 'Operating Expense', balance: 0 },
-      { code: '5600', name: 'Insurance Expense', type: 'Expense', category: 'Operating Expense', balance: 0 },
-      { code: '5700', name: 'Marketing Expense', type: 'Expense', category: 'Operating Expense', balance: 0 },
-      { code: '5800', name: 'Interest Expense', type: 'Expense', category: 'Non-Operating Expense', balance: 0 },
-      { code: '5900', name: 'Other Expenses', type: 'Expense', category: 'Non-Operating Expense', balance: 0 }
+      // ASET (1000-1999)
+      { code: '1000', name: 'Kas', type: 'Asset', category: 'Aset Lancar', balance: 0 },
+      { code: '1010', name: 'Bank', type: 'Asset', category: 'Aset Lancar', balance: 0 },
+      { code: '1100', name: 'Piutang Usaha', type: 'Asset', category: 'Aset Lancar', balance: 0 },
+      { code: '1200', name: 'Persediaan', type: 'Asset', category: 'Aset Lancar', balance: 0 },
+      { code: '1500', name: 'Perlengkapan', type: 'Asset', category: 'Aset Lancar', balance: 0 },
+      { code: '1600', name: 'Beban Dibayar Dimuka', type: 'Asset', category: 'Aset Lancar', balance: 0 },
+      { code: '1800', name: 'Peralatan', type: 'Asset', category: 'Aset Tetap', balance: 0 },
+      { code: '1810', name: 'Akumulasi Penyusutan Peralatan', type: 'Asset', category: 'Aset Tetap', balance: 0 },
+      // LIABILITAS (2000-2999)
+      { code: '2000', name: 'Utang Usaha', type: 'Liability', category: 'Liabilitas Lancar', balance: 0 },
+      { code: '2100', name: 'Utang Bank', type: 'Liability', category: 'Liabilitas Lancar', balance: 0 },
+      { code: '2200', name: 'Beban Yang Masih Harus Dibayar', type: 'Liability', category: 'Liabilitas Lancar', balance: 0 },
+      { code: '2300', name: 'Pendapatan Diterima Dimuka', type: 'Liability', category: 'Liabilitas Lancar', balance: 0 },
+      // EKUITAS (3000-3999)
+      { code: '3000', name: 'Modal Pemilik', type: 'Equity', category: 'Ekuitas', balance: 0 },
+      { code: '3100', name: 'Prive', type: 'Equity', category: 'Ekuitas', balance: 0 },
+      // PENDAPATAN (4000-4999)
+      { code: '4000', name: 'Pendapatan Jasa', type: 'Revenue', category: 'Pendapatan Usaha', balance: 0 },
+      { code: '4100', name: 'Pendapatan Lain-lain', type: 'Revenue', category: 'Pendapatan Lain', balance: 0 },
+      // BEBAN (5000-5999)
+      { code: '5100', name: 'Beban Gaji', type: 'Expense', category: 'Beban Usaha', balance: 0 },
+      { code: '5200', name: 'Beban Sewa', type: 'Expense', category: 'Beban Usaha', balance: 0 },
+      { code: '5300', name: 'Beban Listrik dan Air', type: 'Expense', category: 'Beban Usaha', balance: 0 },
+      { code: '5400', name: 'Beban Perlengkapan', type: 'Expense', category: 'Beban Usaha', balance: 0 },
+      { code: '5500', name: 'Beban Penyusutan', type: 'Expense', category: 'Beban Usaha', balance: 0 },
+      { code: '5600', name: 'Beban Asuransi', type: 'Expense', category: 'Beban Usaha', balance: 0 },
+      { code: '5700', name: 'Beban Pemasaran', type: 'Expense', category: 'Beban Usaha', balance: 0 },
+      { code: '5800', name: 'Beban Bunga', type: 'Expense', category: 'Beban Lain', balance: 0 },
+      { code: '5900', name: 'Beban Lain-lain', type: 'Expense', category: 'Beban Lain', balance: 0 }
     ];
   }
 }

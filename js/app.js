@@ -135,7 +135,7 @@ class AccountingApp {
         this.chartOfAccounts = authManager.getDefaultChartOfAccounts();
       }
 
-      // Classify using AI
+      // Classify using AI (returns debit + credit accounts)
       const classification = await aiClassifier.classifyTransaction(parsed, this.chartOfAccounts);
 
       if (!classification || !classification.classification) {
@@ -144,16 +144,9 @@ class AccountingApp {
 
       const classified = classification.classification;
 
-      // Validate classified data
       if (!classified.accountName || !classified.accountType) {
         return { error: 'Invalid classification result' };
       }
-
-      // Calculate debit/credit based on account type
-      const { debitAmount, creditAmount } = accountingCalculator.calculateDebitCredit(
-        parsed.totalAmount,
-        classified.accountType
-      );
 
       return {
         description: parsed.description,
@@ -161,14 +154,20 @@ class AccountingApp {
         quantity: parsed.quantity,
         date: parsed.date,
         totalAmount: parsed.totalAmount,
+        // Debit entry (primary account)
         account: classified.accountName,
         accountCode: classified.accountCode,
         accountType: classified.accountType,
-        debitAmount: debitAmount,
-        creditAmount: creditAmount,
+        debitAmount: parsed.totalAmount,
+        creditAmount: 0,
+        // Credit entry (offset account)
+        offsetAccountCode: classified.offsetAccountCode || '1000',
+        offsetAccountName: classified.offsetAccountName || 'Kas',
+        offsetAccountType: classified.offsetAccountType || 'Asset',
+        // Display info
         classification: classified.accountType,
         aiConfidence: classified.confidence || 0,
-        reasoning: classified.reasoning || 'Classification completed',
+        reasoning: classified.reasoning || 'Klasifikasi selesai',
         fallback: classification.fallback || false
       };
     } catch (error) {
@@ -184,21 +183,49 @@ class AccountingApp {
    */
   confirmTransaction(transactionData) {
     try {
-      // Save to undo stack
       this.undoStack.push(JSON.parse(JSON.stringify(this.transactions)));
       this.redoStack = [];
 
-      // Create transaction
-      const transaction = transactionManager.createTransaction(this.currentUser, transactionData);
+      // Create DEBIT entry (primary account)
+      const debitEntry = transactionManager.createTransaction(this.currentUser, {
+        date: transactionData.date,
+        description: transactionData.description,
+        quantity: transactionData.quantity,
+        amount: transactionData.amount,
+        totalAmount: transactionData.totalAmount,
+        account: transactionData.account,
+        accountCode: transactionData.accountCode,
+        accountType: transactionData.accountType,
+        debitAmount: transactionData.totalAmount,
+        creditAmount: 0,
+        classification: transactionData.classification,
+        aiConfidence: transactionData.aiConfidence
+      });
 
-      if (transaction.error) {
-        return { error: transaction.error };
-      }
+      if (debitEntry.error) return { error: debitEntry.error };
 
-      // Update local state
-      this.transactions.push(transaction);
+      // Create CREDIT entry (offset account)
+      const creditEntry = transactionManager.createTransaction(this.currentUser, {
+        date: transactionData.date,
+        description: transactionData.description,
+        quantity: transactionData.quantity,
+        amount: transactionData.amount,
+        totalAmount: transactionData.totalAmount,
+        account: transactionData.offsetAccountName || 'Kas',
+        accountCode: transactionData.offsetAccountCode || '1000',
+        accountType: transactionData.offsetAccountType || 'Asset',
+        debitAmount: 0,
+        creditAmount: transactionData.totalAmount,
+        classification: transactionData.offsetAccountType || 'Asset',
+        aiConfidence: transactionData.aiConfidence
+      });
 
-      return { success: true, transaction: transaction };
+      if (creditEntry.error) return { error: creditEntry.error };
+
+      this.transactions.push(debitEntry);
+      this.transactions.push(creditEntry);
+
+      return { success: true, transaction: debitEntry };
     } catch (error) {
       console.error('Error confirming transaction:', error);
       return { error: 'Failed to confirm transaction' };

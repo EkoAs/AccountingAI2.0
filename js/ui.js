@@ -90,17 +90,16 @@ class UIManager {
   }
 
   showClassification(classification) {
-    this.elements.classifiedAccount.textContent = classification.account || classification.accountName || 'N/A';
+    this.elements.classifiedAccount.textContent =
+      (classification.account || classification.accountName || 'N/A') +
+      (classification.offsetAccountName ? ' → ' + classification.offsetAccountName : '');
     this.elements.classifiedType.textContent = classification.accountType || classification.classification || 'N/A';
 
-    let debitCreditText = 'N/A';
-    const type = classification.accountType || classification.classification;
-    if (type === 'Asset' || type === 'Expense') {
-      debitCreditText = 'DEBIT';
-    } else if (type === 'Liability' || type === 'Equity' || type === 'Revenue') {
-      debitCreditText = 'CREDIT';
-    }
-    this.elements.classifiedDebitCredit.textContent = debitCreditText;
+    // Always show DEBIT for primary account (double-entry: primary is always debit side)
+    this.elements.classifiedDebitCredit.textContent =
+      'DEBIT: ' + (classification.account || 'N/A') +
+      ' | KREDIT: ' + (classification.offsetAccountName || 'Kas');
+
     this.elements.classifiedAmount.textContent = this.formatCurrency(classification.totalAmount || 0);
     this.elements.classificationReasoning.textContent = classification.reasoning || 'No reasoning provided';
     this.elements.confidenceScore.textContent = Math.round((classification.aiConfidence || 0) * 100) + '%';

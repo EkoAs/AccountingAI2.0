@@ -94,67 +94,50 @@ class AIClassifier {
       .map(a => `${a.code}: ${a.name} (${a.type})`)
       .join('\n');
 
-    return `You are an expert Indonesian accounting classifier. Your task is to classify transactions according to Indonesian accounting standards (SAK).
+    return `Kamu adalah sistem akuntansi Indonesia yang mengikuti standar PSAK dan double-entry bookkeeping.
 
-TRANSACTION TO CLASSIFY:
-- Item/Description: ${transactionData.description}
-- Unit Price: Rp ${transactionData.amount.toLocaleString('id-ID')}
-- Quantity: ${transactionData.quantity}
-- Total Amount: Rp ${transactionData.totalAmount.toLocaleString('id-ID')}
-- Date: ${transactionData.date}
+TRANSAKSI:
+- Deskripsi: ${transactionData.description}
+- Harga Satuan: Rp ${transactionData.amount.toLocaleString('id-ID')}
+- Kuantitas: ${transactionData.quantity}
+- Total: Rp ${transactionData.totalAmount.toLocaleString('id-ID')}
+- Tanggal: ${transactionData.date}
 
-AVAILABLE ACCOUNTS:
+DAFTAR AKUN:
 ${accountsList}
 
-CLASSIFICATION RULES:
-1. DEBIT/CREDIT DETERMINATION:
-   - Asset accounts (1xxx): DEBIT when increasing
-   - Liability accounts (2xxx): CREDIT when increasing
-   - Equity accounts (3xxx): CREDIT when increasing
-   - Revenue accounts (4xxx): CREDIT when increasing
-   - Expense accounts (5xxx): DEBIT when increasing
+ATURAN SALDO NORMAL (WAJIB DIIKUTI):
+- Akun 1xxx (Aset): Bertambah = DEBIT, Berkurang = KREDIT
+- Akun 2xxx (Liabilitas): Bertambah = KREDIT, Berkurang = DEBIT
+- Akun 3xxx (Ekuitas/Modal): Bertambah = KREDIT, Berkurang = DEBIT
+- Akun 4xxx (Pendapatan): Bertambah = KREDIT, Berkurang = DEBIT
+- Akun 5xxx (Beban): Bertambah = DEBIT, Berkurang = KREDIT
 
-2. EXPENSE CLASSIFICATION:
-   - Supplies/Perlengkapan (5400): Pulpen, kertas, tinta, sticky notes, dll (habis dalam 1 tahun)
-   - Equipment/Peralatan (1800): Komputer, printer, furniture, kendaraan (tahan lama >1 tahun)
-   - Salary/Gaji (5100): Gaji karyawan, upah
-   - Rent/Sewa (5200): Sewa kantor, sewa kendaraan
-   - Utilities/Listrik (5300): Listrik, air, internet, telepon
-   - Depreciation/Penyusutan (5500): Penyusutan aset
-   - Insurance/Asuransi (5600): Asuransi kendaraan, asuransi kantor
-   - Marketing/Pemasaran (5700): Iklan, promosi
-   - Interest/Bunga (5800): Bunga pinjaman
+POLA DOUBLE-ENTRY (setiap transaksi HARUS menghasilkan 2 baris jurnal):
+- modal_awal / investasi → DEBIT Kas (1000) + KREDIT Modal (3000)
+- beli_peralatan tunai → DEBIT Peralatan (1800) + KREDIT Kas (1000)
+- beli_perlengkapan tunai → DEBIT Beban Perlengkapan (5400) + KREDIT Kas (1000)
+- pendapatan_jasa tunai → DEBIT Kas (1000) + KREDIT Pendapatan Jasa (4000)
+- bayar_gaji → DEBIT Beban Gaji (5100) + KREDIT Kas (1000)
+- bayar_sewa → DEBIT Beban Sewa (5200) + KREDIT Kas (1000)
+- bayar_listrik → DEBIT Beban Listrik (5300) + KREDIT Kas (1000)
+- piutang_usaha → DEBIT Piutang (1100) + KREDIT Pendapatan (4000)
+- hutang_usaha → DEBIT Aset/Beban + KREDIT Utang Usaha (2000)
 
-3. ASSET CLASSIFICATION:
-   - Cash (1000): Uang tunai
-   - Bank (1010): Rekening bank
-   - Receivable/Piutang (1100): Piutang usaha
-   - Inventory (1200): Barang dagangan, stok
-   - Supplies/Perlengkapan (1500): Perlengkapan kantor (aset)
-   - Equipment/Peralatan (1800): Peralatan, kendaraan, furniture
-
-4. LIABILITY CLASSIFICATION:
-   - Payable/Hutang (2000): Hutang usaha
-   - Debt/Pinjaman (2100): Pinjaman bank, pinjaman jangka panjang
-   - Accrued/Akrual (2200): Beban yang masih harus dibayar
-
-KEYWORD MATCHING:
-- "pulpen", "kertas", "tinta", "sticky", "penghapus", "penggaris" → Supplies (5400)
-- "komputer", "printer", "meja", "kursi", "lemari", "mobil", "motor" → Equipment (1800)
-- "gaji", "upah", "honor" → Salary (5100)
-- "sewa", "rental" → Rent (5200)
-- "listrik", "air", "internet", "telepon" → Utilities (5300)
-- "hutang", "utang", "payable" → Payable (2000)
-- "pinjaman", "loan" → Debt (2100)
-
-Respond ONLY in valid JSON format (no markdown, no extra text):
+Jawab HANYA dalam format JSON valid (tanpa markdown):
 {
-  "accountCode": "exact account code from list",
-  "accountName": "exact account name from list",
-  "accountType": "Asset/Liability/Equity/Revenue/Expense",
-  "debitCredit": "debit or credit",
+  "debitAccount": {
+    "accountCode": "kode akun debit",
+    "accountName": "nama akun debit",
+    "accountType": "Asset/Liability/Equity/Revenue/Expense"
+  },
+  "creditAccount": {
+    "accountCode": "kode akun kredit",
+    "accountName": "nama akun kredit",
+    "accountType": "Asset/Liability/Equity/Revenue/Expense"
+  },
   "confidence": 0.95,
-  "reasoning": "Brief explanation in Indonesian why this classification is correct"
+  "reasoning": "Penjelasan singkat dalam Bahasa Indonesia mengapa jurnal ini benar"
 }`;
   }
 
@@ -191,28 +174,41 @@ Respond ONLY in valid JSON format (no markdown, no extra text):
 
       const responseText = data.candidates[0].content.parts[0].text;
 
-      // Parse JSON from response - handle various formats
+      // Parse JSON from response
       let jsonMatch = responseText.match(/\{[\s\S]*\}/);
       if (!jsonMatch) {
         throw new Error('No JSON found in response');
       }
 
-      const classification = JSON.parse(jsonMatch[0]);
-      
-      // Validate required fields
-      if (!classification.accountCode || !classification.accountName || !classification.accountType) {
+      const result = JSON.parse(jsonMatch[0]);
+
+      // Support both new double-entry format and legacy single-account format
+      if (result.debitAccount && result.creditAccount) {
+        // New double-entry format
+        return {
+          classification: {
+            accountCode: result.debitAccount.accountCode,
+            accountName: result.debitAccount.accountName,
+            accountType: result.debitAccount.accountType,
+            debitCredit: 'debit',
+            offsetAccountCode: result.creditAccount.accountCode,
+            offsetAccountName: result.creditAccount.accountName,
+            offsetAccountType: result.creditAccount.accountType,
+            confidence: result.confidence || 0.9,
+            reasoning: result.reasoning || ''
+          },
+          success: true
+        };
+      }
+
+      // Legacy single-account format fallback
+      if (!result.accountCode || !result.accountName || !result.accountType) {
         throw new Error('Missing required classification fields');
       }
-
-      // Normalize debitCredit field
-      if (classification.debitCredit) {
-        classification.debitCredit = classification.debitCredit.toLowerCase();
+      if (result.debitCredit) {
+        result.debitCredit = result.debitCredit.toLowerCase();
       }
-
-      return {
-        classification: classification,
-        success: true
-      };
+      return { classification: result, success: true };
     } catch (error) {
       console.error('Error calling Gemini API:', error);
       return null;
@@ -226,19 +222,22 @@ Respond ONLY in valid JSON format (no markdown, no extra text):
    * @returns {object} Classification result
    */
   getFallbackClassification(transactionData, chartOfAccounts) {
-    const suggestion = accountingCalculator.suggestAccountClassification(
+    const result = accountingCalculator.getDoubleEntryClassification(
       transactionData.description,
       chartOfAccounts
     );
 
     return {
       classification: {
-        accountCode: suggestion.accountCode,
-        accountName: suggestion.accountName,
-        accountType: suggestion.accountType,
-        debitCredit: suggestion.debitCredit,
-        confidence: suggestion.confidence,
-        reasoning: 'Classified using local rules (AI unavailable)'
+        accountCode: result.debitAccount.code,
+        accountName: result.debitAccount.name,
+        accountType: result.debitAccount.type,
+        debitCredit: 'debit',
+        offsetAccountCode: result.creditAccount.code,
+        offsetAccountName: result.creditAccount.name,
+        offsetAccountType: result.creditAccount.type,
+        confidence: result.confidence,
+        reasoning: result.reasoning
       },
       success: true,
       fallback: true
