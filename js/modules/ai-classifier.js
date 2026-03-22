@@ -114,15 +114,25 @@ ATURAN SALDO NORMAL (WAJIB DIIKUTI):
 - Akun 5xxx (Beban): Bertambah = DEBIT, Berkurang = KREDIT
 
 POLA DOUBLE-ENTRY (setiap transaksi HARUS menghasilkan 2 baris jurnal):
-- modal_awal / investasi → DEBIT Kas (1000) + KREDIT Modal (3000)
+- modal_awal / investasi / investor → DEBIT Kas (1000) + KREDIT Modal Pemilik (3000)
+  ⚠️ PENTING: "investor" atau "investasi" adalah EKUITAS (3000), BUKAN Beban. Jangan masukkan ke akun 5xxx.
 - beli_peralatan tunai → DEBIT Peralatan (1800) + KREDIT Kas (1000)
+- beli_peralatan_kredit / peralatan_belum_dibayar → DEBIT Peralatan (1800) + KREDIT Utang Usaha (2000)
 - beli_perlengkapan tunai → DEBIT Beban Perlengkapan (5400) + KREDIT Kas (1000)
+- perlengkapan_belum_dibayar / perlengkapan_kredit → DEBIT Beban Perlengkapan (5400) + KREDIT Utang Usaha (2000)
+  ⚠️ PENTING: "belum dibayar" atau "kredit" berarti akun lawan adalah Utang Usaha (2000), BUKAN Kas (1000).
 - pendapatan_jasa tunai → DEBIT Kas (1000) + KREDIT Pendapatan Jasa (4000)
 - bayar_gaji → DEBIT Beban Gaji (5100) + KREDIT Kas (1000)
 - bayar_sewa → DEBIT Beban Sewa (5200) + KREDIT Kas (1000)
 - bayar_listrik → DEBIT Beban Listrik (5300) + KREDIT Kas (1000)
 - piutang_usaha → DEBIT Piutang (1100) + KREDIT Pendapatan (4000)
-- hutang_usaha → DEBIT Aset/Beban + KREDIT Utang Usaha (2000)
+- hutang_usaha / belum_dibayar → DEBIT Aset/Beban + KREDIT Utang Usaha (2000)
+- pinjaman_bank → DEBIT Kas (1000) + KREDIT Utang Bank (2100)
+
+ATURAN KRITIS:
+1. Kata "investor", "investasi", "modal", "setoran" → selalu ke Modal Pemilik (3000), BUKAN ke Beban (5xxx)
+2. Kata "belum dibayar", "kredit", "hutang" → akun lawan selalu Utang Usaha (2000), BUKAN Kas (1000)
+3. Kata "tunai", "cash", "bayar" tanpa "belum" → akun lawan adalah Kas (1000)
 
 Jawab HANYA dalam format JSON valid (tanpa markdown):
 {

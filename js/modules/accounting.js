@@ -101,18 +101,28 @@ class AccountingCalculator {
 
   /**
    * Calculate account balances by account code
+   * Follows normal balance rules: Asset/Expense = Debit normal, Liability/Equity/Revenue = Credit normal
    * @param {array} transactions - Array of transactions
    * @param {array} chartOfAccounts - Chart of accounts
-   * @returns {object} Account balances keyed by account code
+   * @returns {object} Account balances keyed by account code (positive = normal side)
    */
   calculateAccountBalances(transactions, chartOfAccounts) {
     const balances = {};
+    const accountTypes = {};
     chartOfAccounts.forEach(account => {
       balances[account.code] = 0;
+      accountTypes[account.code] = account.type;
     });
     transactions.forEach(txn => {
       if (txn.accountCode && balances.hasOwnProperty(txn.accountCode)) {
-        balances[txn.accountCode] += txn.debitAmount - txn.creditAmount;
+        const type = accountTypes[txn.accountCode];
+        const isDebitNormal = type === 'Asset' || type === 'Expense';
+        if (isDebitNormal) {
+          balances[txn.accountCode] += txn.debitAmount - txn.creditAmount;
+        } else {
+          // Credit-normal: positive balance = credit side
+          balances[txn.accountCode] += txn.creditAmount - txn.debitAmount;
+        }
       }
     });
     return balances;
@@ -120,7 +130,7 @@ class AccountingCalculator {
 
   /**
    * Verify accounting equation using account balances
-   * @param {object} balances - Account balances keyed by code
+   * @param {object} balances - Account balances keyed by code (positive = normal side)
    * @param {array} chartOfAccounts - Chart of accounts
    * @returns {object} Verification result
    */
@@ -129,7 +139,7 @@ class AccountingCalculator {
     let totalRevenue = 0, totalExpenses = 0;
 
     chartOfAccounts.forEach(account => {
-      const balance = balances[account.code] || 0;
+      const balance = Math.abs(balances[account.code] || 0);
       switch (account.type) {
         case 'Asset': totalAssets += balance; break;
         case 'Liability': totalLiabilities += balance; break;
@@ -163,12 +173,14 @@ class AccountingCalculator {
     chartOfAccounts.forEach(account => {
       const balance = balances[account.code] || 0;
       if (balance !== 0) {
+        // Normal balance: Asset & Expense = Debit (positive), Liability/Equity/Revenue = Credit (negative)
+        const isDebitNormal = account.type === 'Asset' || account.type === 'Expense';
         trialBalance.push({
           code: account.code,
           name: account.name,
           type: account.type,
-          debitBalance: balance > 0 ? balance : 0,
-          creditBalance: balance < 0 ? Math.abs(balance) : 0
+          debitBalance: isDebitNormal ? (balance > 0 ? balance : 0) : (balance < 0 ? Math.abs(balance) : 0),
+          creditBalance: isDebitNormal ? (balance < 0 ? Math.abs(balance) : 0) : (balance > 0 ? balance : 0)
         });
       }
     });
@@ -186,7 +198,7 @@ class AccountingCalculator {
     let totalRevenue = 0, totalExpenses = 0;
 
     chartOfAccounts.forEach(account => {
-      const balance = balances[account.code] || 0;
+      const balance = Math.abs(balances[account.code] || 0);
       if (account.type === 'Revenue') totalRevenue += balance;
       else if (account.type === 'Expense') totalExpenses += balance;
     });
@@ -212,36 +224,69 @@ class AccountingCalculator {
     // Default offset is Kas (1000)
     const kas = findAccount('1000');
 
-    // Double-entry pattern rules (ordered by specificity)
+    // Double-entry pattern rules (ordered by specificity — more specific rules FIRST)
     const patterns = [
-      // Modal awal / investasi pemilik → Debit Kas, Kredit Modal
+      // ── KREDIT / BELUM DIBAYAR (harus di atas pola tunai) ──────────────────
+      // Perlengkapan belum dibayar / kredit → Debit Beban Perlengkapan, Kredit Utang Usaha
       {
-        keywords: ['modal', 'investasi', 'setoran', 'modal_awal', 'modal_usaha'],
-        debit: '1000', credit: '3000',
-        reasoning: 'Setoran modal: Kas bertambah (Debit), Modal Pemilik bertambah (Kredit)',
+        keywords: ['perlengkapan_belum_dibayar', 'perlengkapan_kredit', 'beli_perlengkapan_kredit',
+                   'supplies_kredit', 'atk_kredit', 'atk_belum_dibayar'],
+        debit: '5400', credit: '2000',
+        reasoning: 'Perlengkapan belum dibayar: Beban Perlengkapan bertambah (Debit), Utang Usaha bertambah (Kredit) — bukan Kas karena belum dibayar tunai',
         confidence: 0.97
+      },
+      // Peralatan belum dibayar / kredit → Debit Peralatan, Kredit Utang Usaha
+      {
+        keywords: ['peralatan_belum_dibayar', 'peralatan_kredit', 'beli_peralatan_kredit',
+                   'equipment_kredit', 'equipment_belum_dibayar'],
+        debit: '1800', credit: '2000',
+        reasoning: 'Peralatan belum dibayar: Peralatan bertambah (Debit), Utang Usaha bertambah (Kredit) — bukan Kas karena belum dibayar tunai',
+        confidence: 0.97
+      },
+      // Pembelian kredit umum (belum dibayar) → Debit Beban/Aset, Kredit Utang Usaha
+      {
+        keywords: ['belum_dibayar', 'kredit_beli', 'beli_kredit', 'hutang_usaha',
+                   'utang_usaha', 'payable', 'on_credit', 'kredit_pembelian'],
+        debit: '5400', credit: '2000',
+        reasoning: 'Pembelian kredit/belum dibayar: Beban/Aset bertambah (Debit), Utang Usaha bertambah (Kredit)',
+        confidence: 0.95
+      },
+
+      // ── MODAL & EKUITAS ────────────────────────────────────────────────────
+      // Investor / modal awal / setoran pemilik → Debit Kas, Kredit Modal
+      {
+        keywords: ['investor', 'investasi', 'modal', 'setoran', 'modal_awal',
+                   'modal_usaha', 'capital', 'owner_equity', 'equity_in'],
+        debit: '1000', credit: '3000',
+        reasoning: 'Setoran modal/investor: Kas bertambah (Debit), Modal Pemilik bertambah (Kredit) — uang masuk dari pemilik/investor adalah Ekuitas, bukan Beban',
+        confidence: 0.98
       },
       // Prive / penarikan pemilik → Debit Prive, Kredit Kas
       {
-        keywords: ['prive', 'penarikan', 'ambil_uang', 'withdraw'],
+        keywords: ['prive', 'penarikan', 'ambil_uang', 'withdraw', 'drawing'],
         debit: '3100', credit: '1000',
         reasoning: 'Prive: Prive bertambah (Debit), Kas berkurang (Kredit)',
         confidence: 0.95
       },
+
+      // ── PENDAPATAN ─────────────────────────────────────────────────────────
       // Pendapatan tunai → Debit Kas, Kredit Pendapatan
       {
-        keywords: ['pendapatan', 'jasa', 'revenue', 'penjualan', 'service', 'terima_pembayaran', 'bayar_jasa'],
+        keywords: ['pendapatan', 'jasa', 'revenue', 'penjualan', 'service',
+                   'terima_pembayaran', 'bayar_jasa', 'income'],
         debit: '1000', credit: '4000',
         reasoning: 'Pendapatan jasa tunai: Kas bertambah (Debit), Pendapatan bertambah (Kredit)',
         confidence: 0.95
       },
       // Piutang usaha → Debit Piutang, Kredit Pendapatan
       {
-        keywords: ['piutang', 'receivable', 'kredit_jasa', 'jasa_kredit'],
+        keywords: ['piutang', 'receivable', 'kredit_jasa', 'jasa_kredit', 'jasa_belum_dibayar'],
         debit: '1100', credit: '4000',
         reasoning: 'Piutang usaha: Piutang bertambah (Debit), Pendapatan bertambah (Kredit)',
         confidence: 0.93
       },
+
+      // ── ASET TETAP (tunai) ─────────────────────────────────────────────────
       // Beli peralatan tunai → Debit Peralatan, Kredit Kas
       {
         keywords: ['komputer', 'laptop', 'printer', 'meja', 'kursi', 'lemari', 'rak',
@@ -251,6 +296,8 @@ class AccountingCalculator {
         reasoning: 'Pembelian peralatan tunai: Peralatan bertambah (Debit), Kas berkurang (Kredit)',
         confidence: 0.92
       },
+
+      // ── BEBAN (tunai) ──────────────────────────────────────────────────────
       // Bayar gaji → Debit Beban Gaji, Kredit Kas
       {
         keywords: ['gaji', 'upah', 'honor', 'salary', 'wage', 'beban_gaji', 'bayar_gaji'],
@@ -279,7 +326,7 @@ class AccountingCalculator {
                    'stapler', 'klip', 'amplop', 'pensil', 'spidol', 'alat_tulis',
                    'perlengkapan', 'supplies', 'atk', 'buku_tulis'],
         debit: '5400', credit: '1000',
-        reasoning: 'Beban perlengkapan: Beban Perlengkapan bertambah (Debit), Kas berkurang (Kredit)',
+        reasoning: 'Beban perlengkapan tunai: Beban Perlengkapan bertambah (Debit), Kas berkurang (Kredit)',
         confidence: 0.92
       },
       // Bayar asuransi → Debit Beban Asuransi, Kredit Kas
@@ -303,9 +350,11 @@ class AccountingCalculator {
         reasoning: 'Beban bunga: Beban Bunga bertambah (Debit), Kas berkurang (Kredit)',
         confidence: 0.95
       },
-      // Hutang usaha (beli kredit) → Debit Aset/Beban, Kredit Hutang
+
+      // ── UTANG & PINJAMAN ───────────────────────────────────────────────────
+      // Hutang usaha generik → Debit Beban, Kredit Utang Usaha
       {
-        keywords: ['hutang', 'utang', 'kredit_beli', 'beli_kredit', 'payable'],
+        keywords: ['hutang', 'utang', 'payable'],
         debit: '5400', credit: '2000',
         reasoning: 'Pembelian kredit: Beban/Aset bertambah (Debit), Utang Usaha bertambah (Kredit)',
         confidence: 0.88
@@ -317,6 +366,8 @@ class AccountingCalculator {
         reasoning: 'Pinjaman bank: Kas bertambah (Debit), Utang Bank bertambah (Kredit)',
         confidence: 0.95
       },
+
+      // ── PERSEDIAAN ─────────────────────────────────────────────────────────
       // Beli persediaan/barang dagangan → Debit Persediaan, Kredit Kas
       {
         keywords: ['barang', 'stok', 'inventory', 'persediaan', 'dagangan', 'beli_barang'],

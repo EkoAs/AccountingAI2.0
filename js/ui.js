@@ -62,13 +62,13 @@ class UIManager {
   }
 
   showWelcomeSection() {
-    this.elements.welcomeSection.style.display = 'flex';
-    this.elements.appSection.style.display = 'none';
+    if (this.elements.welcomeSection) this.elements.welcomeSection.style.display = 'flex';
+    if (this.elements.appSection) this.elements.appSection.style.display = 'none';
   }
 
   showAppSection() {
-    this.elements.welcomeSection.style.display = 'none';
-    this.elements.appSection.style.display = 'block';
+    if (this.elements.welcomeSection) this.elements.welcomeSection.style.display = 'none';
+    if (this.elements.appSection) this.elements.appSection.style.display = 'block';
   }
 
   getWelcomeData() {
@@ -107,54 +107,60 @@ class UIManager {
   }
 
   hideClassification() {
-    this.elements.classificationDisplay.style.display = 'none';
+    if (this.elements.classificationDisplay) this.elements.classificationDisplay.style.display = 'none';
   }
 
   showLoading() {
-    this.elements.loadingIndicator.style.display = 'flex';
-    this.elements.transactionInput.disabled = true;
+    if (this.elements.loadingIndicator) this.elements.loadingIndicator.style.display = 'flex';
+    if (this.elements.transactionInput) this.elements.transactionInput.disabled = true;
   }
 
   hideLoading() {
-    this.elements.loadingIndicator.style.display = 'none';
-    this.elements.transactionInput.disabled = false;
+    if (this.elements.loadingIndicator) this.elements.loadingIndicator.style.display = 'none';
+    if (this.elements.transactionInput) this.elements.transactionInput.disabled = false;
   }
 
   showError(message) {
+    if (!this.elements.errorMessage) return;
     this.elements.errorMessage.textContent = message;
     this.elements.errorMessage.style.display = 'flex';
-    setTimeout(() => { this.elements.errorMessage.style.display = 'none'; }, 5000);
+    setTimeout(() => { if (this.elements.errorMessage) this.elements.errorMessage.style.display = 'none'; }, 5000);
   }
 
   showSuccess(message) {
+    if (!this.elements.successMessage) return;
     this.elements.successMessage.textContent = message;
     this.elements.successMessage.style.display = 'flex';
-    setTimeout(() => { this.elements.successMessage.style.display = 'none'; }, 3000);
+    setTimeout(() => { if (this.elements.successMessage) this.elements.successMessage.style.display = 'none'; }, 3000);
   }
 
   updateReportSummary(summary) {
-    this.elements.totalDebits.textContent = this.formatCurrency(summary.totalDebits);
-    this.elements.totalCredits.textContent = this.formatCurrency(summary.totalCredits);
-    if (summary.balanced) {
-      this.elements.balanceStatus.textContent = '✓ Balanced';
-      this.elements.balanceStatus.className = 'status-indicator balanced';
-      this.elements.generatePdfBtn.disabled = false;
-    } else {
-      this.elements.balanceStatus.textContent = '✗ Unbalanced';
-      this.elements.balanceStatus.className = 'status-indicator unbalanced';
-      this.elements.generatePdfBtn.disabled = true;
+    if (!summary) return;
+    if (this.elements.totalDebits) this.elements.totalDebits.textContent = this.formatCurrency(summary.totalDebits || 0);
+    if (this.elements.totalCredits) this.elements.totalCredits.textContent = this.formatCurrency(summary.totalCredits || 0);
+    if (this.elements.balanceStatus) {
+      if (summary.balanced) {
+        this.elements.balanceStatus.textContent = '✓ Balanced';
+        this.elements.balanceStatus.className = 'status-indicator balanced';
+        if (this.elements.generatePdfBtn) this.elements.generatePdfBtn.disabled = false;
+      } else {
+        this.elements.balanceStatus.textContent = '✗ Unbalanced';
+        this.elements.balanceStatus.className = 'status-indicator unbalanced';
+        if (this.elements.generatePdfBtn) this.elements.generatePdfBtn.disabled = true;
+      }
     }
   }
 
   renderReportTable(report) {
+    if (!this.elements.tableHeader || !this.elements.tableBody) return;
     if (!report || report.error) {
       this.elements.tableHeader.innerHTML = '';
       this.elements.tableBody.innerHTML = '';
-      this.elements.emptyState.style.display = 'flex';
+      if (this.elements.emptyState) this.elements.emptyState.style.display = 'flex';
       return;
     }
 
-    this.elements.emptyState.style.display = 'none';
+    if (this.elements.emptyState) this.elements.emptyState.style.display = 'none';
 
     let headers = [];
     switch (report.type) {
@@ -213,11 +219,12 @@ class UIManager {
   }
 
   updateUndoRedoButtons(canUndo, canRedo) {
-    this.elements.undoBtn.disabled = !canUndo;
-    this.elements.redoBtn.disabled = !canRedo;
+    if (this.elements.undoBtn) this.elements.undoBtn.disabled = !canUndo;
+    if (this.elements.redoBtn) this.elements.redoBtn.disabled = !canRedo;
   }
 
   updateStatusBadge(status, color) {
+    if (!this.elements.statusBadge) return;
     color = color || 'success';
     this.elements.statusBadge.textContent = status;
     this.elements.statusBadge.className = 'status-badge badge-' + color;
@@ -260,8 +267,10 @@ class UIManager {
   }
 
   clearTransactionInput() {
-    this.elements.transactionInput.value = '';
-    this.elements.transactionInput.focus();
+    if (this.elements.transactionInput) {
+      this.elements.transactionInput.value = '';
+      this.elements.transactionInput.focus();
+    }
   }
 
   formatCurrency(amount) {
@@ -273,21 +282,21 @@ class UIManager {
   }
 
   disableTransactionInput() {
-    this.elements.transactionInput.disabled = true;
-    this.elements.doneBtn.textContent = 'Edit';
+    if (this.elements.transactionInput) this.elements.transactionInput.disabled = true;
+    if (this.elements.doneBtn) this.elements.doneBtn.textContent = 'Edit';
   }
 
   enableTransactionInput() {
-    this.elements.transactionInput.disabled = false;
-    this.elements.doneBtn.textContent = 'Done';
+    if (this.elements.transactionInput) this.elements.transactionInput.disabled = false;
+    if (this.elements.doneBtn) this.elements.doneBtn.textContent = 'Done';
   }
 
   getTransactionInput() {
-    return this.elements.transactionInput.value;
+    return this.elements.transactionInput ? this.elements.transactionInput.value : '';
   }
 
   getSelectedReportType() {
-    return this.elements.reportTypeSelect.value;
+    return this.elements.reportTypeSelect ? this.elements.reportTypeSelect.value : 'general-journal';
   }
 }
 

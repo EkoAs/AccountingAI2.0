@@ -170,7 +170,14 @@ function handleStartApp() {
 
     ui.showSuccess('Selamat datang, ' + welcomeData.companyName + '!');
 
-    setTimeout(() => showAppInterface(), 500);
+    setTimeout(() => {
+      try {
+        showAppInterface();
+      } catch (err) {
+        console.error('Error showing app interface:', err);
+        ui.showError('Gagal memuat antarmuka: ' + err.message);
+      }
+    }, 500);
   } catch (error) {
     console.error('Error starting app:', error);
     ui.showError('Gagal memulai aplikasi: ' + error.message);
@@ -436,12 +443,13 @@ function handleSaveSettings() {
  */
 function updateReport() {
   try {
+    if (!ui.elements.reportTypeSelect) return;
     const reportType = ui.getSelectedReportType();
     const report = app.generateReport(reportType);
 
     if (report && !report.error) {
       ui.renderReportTable(report);
-      ui.updateReportSummary(report.summary);
+      if (report.summary) ui.updateReportSummary(report.summary);
     }
   } catch (error) {
     console.error('Error updating report:', error);
@@ -452,6 +460,7 @@ function updateReport() {
  * Update undo/redo button states
  */
 function updateUndoRedoButtons() {
+  if (!ui.elements.undoBtn || !ui.elements.redoBtn) return;
   const canUndo = app.undoStack.length > 0;
   const canRedo = app.redoStack.length > 0;
   ui.updateUndoRedoButtons(canUndo, canRedo);
@@ -462,7 +471,7 @@ function updateUndoRedoButtons() {
  */
 function showWelcomeScreen() {
   ui.showWelcomeSection();
-  ui.elements.companyName.focus();
+  if (ui.elements.companyName) ui.elements.companyName.focus();
 }
 
 /**
@@ -470,6 +479,9 @@ function showWelcomeScreen() {
  */
 function showAppInterface() {
   try {
+    if (!ui.elements.appSection) {
+      throw new Error('appSection element not found');
+    }
     ui.showAppSection();
     updateReport();
     updateUndoRedoButtons();
