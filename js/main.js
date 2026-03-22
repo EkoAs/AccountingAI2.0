@@ -16,16 +16,19 @@ document.addEventListener('DOMContentLoaded', () => {
  * Initialize application
  */
 function initializeApp() {
-  app.initialize(GEMINI_API_KEY);
-  
-  // Check if user is already logged in
-  const currentUser = sessionStorage.getItem('currentUser');
-  if (currentUser) {
-    app.currentUser = currentUser;
-    app.loadUserData();
-    showAppInterface();
-  } else {
-    showAuthInterface();
+  try {
+    // Create a temporary session user (no login required)
+    const tempUserId = sessionStorage.getItem('currentUser') || ('temp_user_' + Date.now());
+    app.currentUser = tempUserId;
+    sessionStorage.setItem('currentUser', tempUserId);
+
+    app.initialize(GEMINI_API_KEY);
+
+    // Show welcome screen
+    showWelcomeScreen();
+  } catch (error) {
+    console.error('Error initializing application:', error);
+    showWelcomeScreen();
   }
 }
 
@@ -33,106 +36,144 @@ function initializeApp() {
  * Setup all event listeners
  */
 function setupEventListeners() {
-  // Auth Events
-  ui.elements.toggleRegister.addEventListener('click', (e) => {
-    e.preventDefault();
-    ui.toggleAuthForm();
-  });
-
-  ui.elements.toggleLogin.addEventListener('click', (e) => {
-    e.preventDefault();
-    ui.toggleAuthForm();
-  });
-
-  ui.elements.loginBtn.addEventListener('click', handleLogin);
-  ui.elements.registerBtn.addEventListener('click', handleRegister);
+  // Welcome Events
+  if (ui.elements.startBtn) {
+    ui.elements.startBtn.addEventListener('click', handleStartApp);
+  }
 
   // Header Events
-  ui.elements.logoutBtn.addEventListener('click', handleLogout);
-  ui.elements.settingsBtn.addEventListener('click', () => {
-    ui.showSettingsModal();
-    const profile = authManager.getUserProfile(app.currentUser);
-    ui.setSettingsData({
-      organizationName: profile.organizationName,
-      reportTitle: profile.reportTitle,
-      preparer: profile.preparer
-    });
-  });
-
-  ui.elements.closeSettingsBtn.addEventListener('click', ui.hideSettingsModal.bind(ui));
-  ui.elements.cancelSettingsBtn.addEventListener('click', ui.hideSettingsModal.bind(ui));
-  ui.elements.saveSettingsBtn.addEventListener('click', handleSaveSettings);
-
-  // Transaction Input Events
-  ui.elements.transactionInput.addEventListener('keypress', (e) => {
-    if (e.key === 'Enter') {
-      handleTransactionSubmit();
+    if (ui.elements.logoutBtn) {
+      ui.elements.logoutBtn.addEventListener('click', handleLogout);
     }
-  });
 
-  ui.elements.confirmBtn.addEventListener('click', handleConfirmTransaction);
-  ui.elements.adjustBtn.addEventListener('click', handleAdjustTransaction);
+    if (ui.elements.reportModeBtn) {
+      ui.elements.reportModeBtn.addEventListener('click', () => {
+        ui.showSuccess('Report mode feature coming soon');
+      });
+    }
 
-  // Action Button Events
-  ui.elements.undoBtn.addEventListener('click', handleUndo);
-  ui.elements.redoBtn.addEventListener('click', handleRedo);
-  ui.elements.doneBtn.addEventListener('click', handleDone);
+    if (ui.elements.hamburgerBtn) {
+      ui.elements.hamburgerBtn.addEventListener('click', () => {
+        const navMenu = document.querySelector('.nav-menu');
+        if (navMenu) {
+          navMenu.classList.toggle('active');
+          ui.elements.hamburgerBtn.classList.toggle('active');
+        }
+      });
+    }
 
-  // Report Events
-  ui.elements.reportTypeSelect.addEventListener('change', handleReportTypeChange);
-  ui.elements.generatePdfBtn.addEventListener('click', handleGeneratePDF);
-  ui.elements.exportDataBtn.addEventListener('click', handleExportData);
+    if (ui.elements.settingsBtn) {
+      ui.elements.settingsBtn.addEventListener('click', () => {
+        ui.showSettingsModal();
+        const profile = authManager.getUserProfile(app.currentUser) || {};
+        ui.setSettingsData({
+          organizationName: app.metadata.organizationName || profile.organizationName || '',
+          reportTitle: app.metadata.reportTitle || profile.reportTitle || 'Laporan Keuangan',
+          preparer: app.metadata.preparer || profile.preparer || ''
+        });
+      });
+    }
 
-  // Modal Events
-  ui.elements.confirmCancel.addEventListener('click', ui.hideConfirmation.bind(ui));
+    if (ui.elements.closeSettingsBtn) {
+      ui.elements.closeSettingsBtn.addEventListener('click', ui.hideSettingsModal.bind(ui));
+    }
+
+    if (ui.elements.cancelSettingsBtn) {
+      ui.elements.cancelSettingsBtn.addEventListener('click', ui.hideSettingsModal.bind(ui));
+    }
+
+    if (ui.elements.saveSettingsBtn) {
+      ui.elements.saveSettingsBtn.addEventListener('click', handleSaveSettings);
+    }
+
+    // Transaction Input Events
+    if (ui.elements.transactionInput) {
+      ui.elements.transactionInput.addEventListener('keypress', (e) => {
+        if (e.key === 'Enter') {
+          handleTransactionSubmit();
+        }
+      });
+    }
+
+    if (ui.elements.confirmBtn) {
+      ui.elements.confirmBtn.addEventListener('click', handleConfirmTransaction);
+    }
+
+    if (ui.elements.adjustBtn) {
+      ui.elements.adjustBtn.addEventListener('click', handleAdjustTransaction);
+    }
+
+    // Action Button Events
+    if (ui.elements.undoBtn) {
+      ui.elements.undoBtn.addEventListener('click', handleUndo);
+    }
+
+    if (ui.elements.redoBtn) {
+      ui.elements.redoBtn.addEventListener('click', handleRedo);
+    }
+
+    if (ui.elements.resetBtn) {
+      ui.elements.resetBtn.addEventListener('click', handleReset);
+    }
+
+    if (ui.elements.doneBtn) {
+      ui.elements.doneBtn.addEventListener('click', handleDone);
+    }
+
+    // Report Events
+    if (ui.elements.reportTypeSelect) {
+      ui.elements.reportTypeSelect.addEventListener('change', handleReportTypeChange);
+    }
+
+    if (ui.elements.generatePdfBtn) {
+      ui.elements.generatePdfBtn.addEventListener('click', handleGeneratePDF);
+    }
+
+    if (ui.elements.exportDataBtn) {
+      ui.elements.exportDataBtn.addEventListener('click', handleExportData);
+    }
+
+    // Modal Events
+    if (ui.elements.confirmCancel) {
+      ui.elements.confirmCancel.addEventListener('click', ui.hideConfirmation.bind(ui));
+    }
+
+    if (ui.elements.confirmOk) {
+      ui.elements.confirmOk.addEventListener('click', () => {
+        // This will be set dynamically in showConfirmation
+      });
+    }
+
 }
 
 /**
- * Handle login
+ * Handle start app from welcome screen
  */
-async function handleLogin() {
-  const credentials = ui.getLoginCredentials();
+function handleStartApp() {
+  try {
+    const welcomeData = ui.getWelcomeData();
 
-  if (!credentials.email || !credentials.password) {
-    ui.showError('Please fill in all fields');
-    return;
-  }
+    if (!welcomeData.companyName.trim()) {
+      ui.showError('Nama perusahaan harus diisi');
+      return;
+    }
 
-  const result = app.loginUser(credentials.email, credentials.password);
+    // Ensure metadata object exists
+    if (!app.metadata) app.metadata = {};
 
-  if (result.success) {
-    ui.showSuccess('Login successful');
-    ui.updateUserEmail(credentials.email);
-    showAppInterface();
-  } else {
-    ui.showError(result.message);
-  }
-}
+    app.metadata.organizationName = welcomeData.companyName;
+    app.metadata.reportTitle = welcomeData.reportTitle;
+    app.metadata.preparer = welcomeData.preparerName;
+    app.metadata.dateRange = '';
 
-/**
- * Handle registration
- */
-async function handleRegister() {
-  const credentials = ui.getRegisterCredentials();
+    storageManager.saveData(app.currentUser, 'metadata', app.metadata);
 
-  if (!credentials.email || !credentials.password || !credentials.confirm) {
-    ui.showError('Please fill in all fields');
-    return;
-  }
+    ui.showSuccess('Selamat datang, ' + welcomeData.companyName + '!');
 
-  if (credentials.password !== credentials.confirm) {
-    ui.showError('Passwords do not match');
-    return;
-  }
-
-  const result = app.registerUser(credentials.email, credentials.password);
-
-  if (result.success) {
-    ui.showSuccess('Registration successful');
-    ui.updateUserEmail(credentials.email);
-    showAppInterface();
-  } else {
-    ui.showError(result.message);
+    setTimeout(() => showAppInterface(), 500);
+  } catch (error) {
+    console.error('Error starting app:', error);
+    ui.showError('Gagal memulai aplikasi: ' + error.message);
   }
 }
 
@@ -141,12 +182,13 @@ async function handleRegister() {
  */
 function handleLogout() {
   ui.showConfirmation(
-    'Logout',
-    'Are you sure you want to logout?',
+    'Kembali ke Welcome',
+    'Apakah Anda ingin kembali ke layar welcome?',
     () => {
-      app.logoutUser();
-      ui.clearAuthForms();
-      showAuthInterface();
+      // Reset app state
+      app.resetAppState();
+      ui.clearWelcomeForm();
+      showWelcomeScreen();
     }
   );
 }
@@ -204,8 +246,20 @@ function handleConfirmTransaction() {
     return;
   }
 
+  // Check if transaction needs offset
+  const offsetSuggestion = autoBalancer.suggestOffsetTransaction(
+    window.currentTransaction,
+    app.chartOfAccounts
+  );
+
   // Success feedback
   ui.showSuccess('✓ Transaction added to report');
+  
+  // Show offset suggestion if needed
+  if (offsetSuggestion && offsetSuggestion.accountCode !== window.currentTransaction.accountCode) {
+    const offsetMsg = `💡 Tip: Consider adding offset transaction:\n${offsetSuggestion.account} (${offsetSuggestion.accountCode})\nAmount: Rp ${(offsetSuggestion.totalAmount).toLocaleString('id-ID')}`;
+    console.log(offsetMsg);
+  }
   
   // Clear UI
   ui.hideClassification();
@@ -249,6 +303,30 @@ function handleRedo() {
     updateReport();
     updateUndoRedoButtons();
   }
+}
+
+/**
+ * Handle reset all data
+ */
+function handleReset() {
+  ui.showConfirmation(
+    'Reset All Data',
+    'Are you sure you want to delete ALL transactions? This cannot be undone.',
+    () => {
+      const success = app.resetAllData();
+      
+      if (success) {
+        ui.showSuccess('✓ All data has been reset');
+        ui.clearTransactionInput();
+        ui.hideClassification();
+        ui.updateStatusBadge('Ready', 'success');
+        updateReport();
+        updateUndoRedoButtons();
+      } else {
+        ui.showError('Failed to reset data');
+      }
+    }
+  );
 }
 
 /**
@@ -342,26 +420,31 @@ function handleExportData() {
 function handleSaveSettings() {
   const settings = ui.getSettingsData();
 
-  const success = app.updateUserProfile(settings);
+  // Update app metadata directly (no login required)
+  if (!app.metadata) app.metadata = {};
+  app.metadata.organizationName = settings.organizationName;
+  app.metadata.reportTitle = settings.reportTitle;
+  app.metadata.preparer = settings.preparer;
+  storageManager.saveData(app.currentUser, 'metadata', app.metadata);
 
-  if (success) {
-    ui.hideSettingsModal();
-    ui.showSuccess('Settings saved successfully');
-  } else {
-    ui.showError('Failed to save settings');
-  }
+  ui.hideSettingsModal();
+  ui.showSuccess('Settings saved successfully');
 }
 
 /**
  * Update report display
  */
 function updateReport() {
-  const reportType = ui.getSelectedReportType();
-  const report = app.generateReport(reportType);
+  try {
+    const reportType = ui.getSelectedReportType();
+    const report = app.generateReport(reportType);
 
-  if (report && !report.error) {
-    ui.renderReportTable(report);
-    ui.updateReportSummary(report.summary);
+    if (report && !report.error) {
+      ui.renderReportTable(report);
+      ui.updateReportSummary(report.summary);
+    }
+  } catch (error) {
+    console.error('Error updating report:', error);
   }
 }
 
@@ -375,21 +458,25 @@ function updateUndoRedoButtons() {
 }
 
 /**
- * Show auth interface
+ * Show welcome screen
  */
-function showAuthInterface() {
-  ui.showAuthSection();
-  ui.elements.loginForm.classList.add('active');
-  ui.elements.registerForm.classList.remove('active');
+function showWelcomeScreen() {
+  ui.showWelcomeSection();
+  ui.elements.companyName.focus();
 }
 
 /**
  * Show app interface
  */
 function showAppInterface() {
-  ui.showAppSection();
-  updateReport();
-  updateUndoRedoButtons();
+  try {
+    ui.showAppSection();
+    updateReport();
+    updateUndoRedoButtons();
+  } catch (error) {
+    console.error('Error showing app interface:', error);
+    ui.showError('Error loading application: ' + error.message);
+  }
 }
 
 /**
@@ -406,3 +493,5 @@ function setupAPIKey() {
 
 // Export functions for global access
 window.setupAPIKey = setupAPIKey;
+window.handleStartApp = handleStartApp;
+window.handleLogout = handleLogout;

@@ -26,19 +26,14 @@ class AccountingApp {
    */
   initialize(apiKey) {
     try {
-      // Initialize AI classifier
       if (apiKey) {
         aiClassifier.initializeApiKey(apiKey);
       }
-
-      // Check for existing session
       const savedUser = sessionStorage.getItem('currentUser');
       if (savedUser) {
         this.currentUser = savedUser;
         this.loadUserData();
       }
-
-      console.log('Application initialized successfully');
     } catch (error) {
       console.error('Error initializing application:', error);
     }
@@ -51,6 +46,9 @@ class AccountingApp {
    * @returns {object} Registration result
    */
   registerUser(email, password) {
+    if (!email || !password) {
+      return { success: false, message: 'Email and password are required' };
+    }
     const result = authManager.register(email, password);
     if (result.success) {
       this.currentUser = result.userId;
@@ -67,6 +65,9 @@ class AccountingApp {
    * @returns {object} Login result
    */
   loginUser(email, password) {
+    if (!email || !password) {
+      return { success: false, message: 'Email and password are required' };
+    }
     const result = authManager.login(email, password);
     if (result.success) {
       this.currentUser = result.userId;
@@ -99,6 +100,12 @@ class AccountingApp {
     this.transactions = transactionManager.getTransactions(this.currentUser) || [];
     this.chartOfAccounts = storageManager.loadData(this.currentUser, 'chartOfAccounts') || [];
 
+    // If chartOfAccounts is empty, initialize with defaults
+    if (!this.chartOfAccounts || this.chartOfAccounts.length === 0) {
+      this.chartOfAccounts = authManager.getDefaultChartOfAccounts();
+      storageManager.saveData(this.currentUser, 'chartOfAccounts', this.chartOfAccounts);
+    }
+
     const profile = authManager.getUserProfile(this.currentUser);
     if (profile) {
       this.metadata = {
@@ -123,6 +130,11 @@ class AccountingApp {
         return { error: parsed.error };
       }
 
+      // Ensure chartOfAccounts is loaded
+      if (!this.chartOfAccounts || this.chartOfAccounts.length === 0) {
+        this.chartOfAccounts = authManager.getDefaultChartOfAccounts();
+      }
+
       // Classify using AI
       const classification = await aiClassifier.classifyTransaction(parsed, this.chartOfAccounts);
 
@@ -132,7 +144,12 @@ class AccountingApp {
 
       const classified = classification.classification;
 
-      // Calculate debit/credit
+      // Validate classified data
+      if (!classified.accountName || !classified.accountType) {
+        return { error: 'Invalid classification result' };
+      }
+
+      // Calculate debit/credit based on account type
       const { debitAmount, creditAmount } = accountingCalculator.calculateDebitCredit(
         parsed.totalAmount,
         classified.accountType
@@ -150,8 +167,8 @@ class AccountingApp {
         debitAmount: debitAmount,
         creditAmount: creditAmount,
         classification: classified.accountType,
-        aiConfidence: classified.confidence,
-        reasoning: classified.reasoning,
+        aiConfidence: classified.confidence || 0,
+        reasoning: classified.reasoning || 'Classification completed',
         fallback: classification.fallback || false
       };
     } catch (error) {
@@ -439,17 +456,21 @@ class AccountingApp {
   }
 
   /**
-   * Get application state
-   * @returns {object} Current state
+   * Reset all data for current user
+   * @returns {boolean} Success status
    */
-  getState() {
-    return {
-      currentUser: this.currentUser,
-      currentReport: this.currentReport,
-      transactionCount: this.transactions.length,
-      isFinalized: this.isFinalized,
-      accountingEquation: this.verifyAccountingEquation()
-    };
+  resetAllData() {
+    try {
+      this.transactions = [];
+      storageManager.saveData(this.currentUser, 'transactions', []);
+      this.undoStack = [];
+      this.redoStack = [];
+      this.isFinalized = false;
+      return true;
+    } catch (error) {
+      console.error('Error resetting data:', error);
+      return false;
+    }
   }
 }
 

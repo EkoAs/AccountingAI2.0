@@ -29,7 +29,7 @@
                 </nav>
                 <div class="user-info">
                     <span id="userEmail" class="user-email"></span>
-                    <button class="btn-logout" id="logoutBtn">Logout</button>
+                    <button class="btn-logout" id="logoutBtn">↩ Kembali</button>
                 </div>
                 <button class="hamburger" id="hamburgerBtn">
                     <span></span>
@@ -42,45 +42,71 @@
 
     <!-- Main Container -->
     <div class="main-container">
-        <!-- Auth Section (Initially Visible) -->
-        <div id="authSection" class="auth-section">
-            <div class="auth-container">
-                <div class="auth-card">
-                    <h2>Welcome to Accounting System</h2>
-                    <p>Manage your accounting with AI-powered classification</p>
+        <!-- Welcome Section (Initially Visible) -->
+        <div id="welcomeSection" class="welcome-section">
+            <div class="welcome-container">
+                <div class="welcome-card">
+                    <h2>Selamat Datang di Sistem Akuntansi</h2>
+                    <p class="welcome-subtitle">Automated Accounting Ledger System</p>
                     
-                    <!-- Login Form -->
-                    <div id="loginForm" class="auth-form active">
-                        <h3>Login</h3>
-                        <div class="form-group">
-                            <label for="loginEmail">Email</label>
-                            <input type="email" id="loginEmail" placeholder="Enter your email" required>
+                    <div class="welcome-content">
+                        <div class="welcome-intro">
+                            <h3>📋 Panduan Singkat</h3>
+                            <ul class="guide-list">
+                                <li><strong>Input Transaksi:</strong> Masukkan transaksi dalam format: nama_barang jumlah kuantitas tanggal</li>
+                                <li><strong>AI Classification:</strong> Sistem otomatis mengklasifikasi akun dan debit/kredit</li>
+                                <li><strong>Laporan:</strong> Lihat General Journal, General Ledger, Trial Balance, dan Reversing Journal</li>
+                                <li><strong>Export:</strong> Unduh laporan dalam format PDF atau JSON</li>
+                                <li><strong>Undo/Redo:</strong> Batalkan atau ulangi transaksi dengan mudah</li>
+                            </ul>
                         </div>
-                        <div class="form-group">
-                            <label for="loginPassword">Password</label>
-                            <input type="password" id="loginPassword" placeholder="Enter your password" required>
+
+                        <div class="welcome-form">
+                            <h3>🏢 Informasi Perusahaan</h3>
+                            <div class="form-group">
+                                <label for="companyName">Nama Perusahaan/Usaha</label>
+                                <input type="text" id="companyName" placeholder="Contoh: PT Maju Jaya" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="welcomeReportTitle">Judul Laporan</label>
+                                <input type="text" id="welcomeReportTitle" placeholder="Contoh: Laporan Keuangan 2025" value="Laporan Keuangan">
+                            </div>
+                            <div class="form-group">
+                                <label for="preparerName">Nama Penyusun</label>
+                                <input type="text" id="preparerName" placeholder="Nama Anda">
+                            </div>
+                            <button class="btn-primary" id="startBtn" onclick="handleStartApp()">Mulai Sekarang</button>
                         </div>
-                        <button class="btn-primary" id="loginBtn">Login</button>
-                        <p class="auth-toggle">Don't have account? <a href="#" id="toggleRegister">Register here</a></p>
                     </div>
 
-                    <!-- Register Form -->
-                    <div id="registerForm" class="auth-form">
-                        <h3>Register</h3>
-                        <div class="form-group">
-                            <label for="registerEmail">Email</label>
-                            <input type="email" id="registerEmail" placeholder="Enter your email" required>
+                    <div class="welcome-features">
+                        <h3>✨ Fitur Utama</h3>
+                        <div class="features-grid">
+                            <div class="feature-item"></div>
+                                <span class="feature-icon">🤖</span>
+                                <span class="feature-text">AI Classification</span>
+                            </div>
+                            <div class="feature-item">
+                                <span class="feature-icon">📊</span>
+                                <span class="feature-text">Multi-Report</span>
+                            </div>
+                            <div class="feature-item">
+                                <span class="feature-icon">⚖️</span>
+                                <span class="feature-text">Auto Balance</span>
+                            </div>
+                            <div class="feature-item">
+                                <span class="feature-icon">↩️</span>
+                                <span class="feature-text">Undo/Redo</span>
+                            </div>
+                            <div class="feature-item">
+                                <span class="feature-icon">📄</span>
+                                <span class="feature-text">PDF Export</span>
+                            </div>
+                            <div class="feature-item">
+                                <span class="feature-icon">💾</span>
+                                <span class="feature-text">Auto Save</span>
+                            </div>
                         </div>
-                        <div class="form-group">
-                            <label for="registerPassword">Password</label>
-                            <input type="password" id="registerPassword" placeholder="At least 6 characters" required>
-                        </div>
-                        <div class="form-group">
-                            <label for="registerConfirm">Confirm Password</label>
-                            <input type="password" id="registerConfirm" placeholder="Confirm password" required>
-                        </div>
-                        <button class="btn-primary" id="registerBtn">Register</button>
-                        <p class="auth-toggle">Already have account? <a href="#" id="toggleLogin">Login here</a></p>
                     </div>
                 </div>
             </div>
@@ -160,6 +186,7 @@
                     <div class="action-buttons">
                         <button class="btn-secondary" id="undoBtn" disabled>↶ Undo</button>
                         <button class="btn-secondary" id="redoBtn" disabled>↷ Redo</button>
+                        <button class="btn-danger" id="resetBtn">🗑 Reset All</button>
                         <button class="btn-primary" id="doneBtn">Done</button>
                     </div>
                 </div>
@@ -234,8 +261,8 @@
                     <input type="text" id="orgName" placeholder="Enter organization name">
                 </div>
                 <div class="form-group">
-                    <label for="reportTitle">Report Title</label>
-                    <input type="text" id="reportTitle" placeholder="Enter report title">
+                    <label for="settingsReportTitle">Report Title</label>
+                    <input type="text" id="settingsReportTitle" placeholder="Enter report title">
                 </div>
                 <div class="form-group">
                     <label for="preparer">Preparer Name</label>
@@ -271,6 +298,7 @@
     <script src="js/modules/transaction.js"></script>
     <script src="js/modules/accounting.js"></script>
     <script src="js/modules/ai-classifier.js"></script>
+    <script src="js/modules/auto-balancer.js"></script>
     <script src="js/modules/report-generator.js"></script>
     <script src="js/modules/pdf-generator.js"></script>
     <script src="js/app.js"></script>

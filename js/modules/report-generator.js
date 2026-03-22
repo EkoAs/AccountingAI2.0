@@ -11,11 +11,14 @@ class ReportGenerator {
   /**
    * Generate General Journal report
    * @param {array} transactions - All transactions
+   * @param {array} chartOfAccounts - Chart of accounts
    * @param {object} metadata - Report metadata
    * @returns {object} Report data
    */
-  generateGeneralJournal(transactions, metadata) {
-    const sorted = transactions.sort((a, b) => new Date(a.date) - new Date(b.date));
+  generateGeneralJournal(transactions, chartOfAccounts, metadata) {
+    // Arrange transactions in proper order
+    const arranged = autoBalancer.arrangeTransactions(transactions, chartOfAccounts || []);
+    const sorted = arranged.sort((a, b) => new Date(a.date) - new Date(b.date));
 
     const { totalDebits, totalCredits } = accountingCalculator.calculateTotals(sorted);
 
@@ -191,7 +194,7 @@ class ReportGenerator {
   generateReport(reportType, transactions, chartOfAccounts, metadata) {
     switch (reportType) {
       case 'general-journal':
-        return this.generateGeneralJournal(transactions, metadata);
+        return this.generateGeneralJournal(transactions, chartOfAccounts, metadata);
       case 'general-ledger':
         return this.generateGeneralLedger(transactions, chartOfAccounts, metadata);
       case 'trial-balance':

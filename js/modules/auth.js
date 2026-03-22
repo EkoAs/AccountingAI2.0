@@ -34,27 +34,19 @@ class AuthManager {
    */
   register(email, password) {
     try {
-      // Validate email format
       const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
       if (!emailRegex.test(email)) {
         return { success: false, message: 'Invalid email format' };
       }
-
-      // Validate password strength
       if (password.length < 6) {
         return { success: false, message: 'Password must be at least 6 characters' };
       }
-
-      // Check if user already exists
       const existingUsers = this.getAllUsers();
       if (existingUsers.some(user => user.email === email)) {
         return { success: false, message: 'Email already registered' };
       }
-
-      // Create new user
       const userId = this.generateUserId();
       const hashedPassword = this.hashPassword(password);
-
       const userProfile = {
         userId: userId,
         email: email,
@@ -65,21 +57,13 @@ class AuthManager {
         createdAt: new Date().toISOString(),
         lastLogin: null
       };
-
-      // Save user profile
       storageManager.saveData(userId, 'profile', userProfile);
-
-      // Initialize empty transactions array
       storageManager.saveData(userId, 'transactions', []);
-
-      // Initialize chart of accounts
-      const chartOfAccounts = this.getDefaultChartOfAccounts();
-      storageManager.saveData(userId, 'chartOfAccounts', chartOfAccounts);
-
+      storageManager.saveData(userId, 'chartOfAccounts', this.getDefaultChartOfAccounts());
       return { success: true, message: 'Registration successful', userId: userId };
     } catch (error) {
       console.error('Error during registration:', error);
-      return { success: false, message: 'Registration failed' };
+      return { success: false, message: 'Registration failed: ' + error.message };
     }
   }
 
@@ -93,28 +77,21 @@ class AuthManager {
     try {
       const users = this.getAllUsers();
       const user = users.find(u => u.email === email);
-
       if (!user) {
         return { success: false, message: 'User not found' };
       }
-
       const hashedPassword = this.hashPassword(password);
       if (user.passwordHash !== hashedPassword) {
         return { success: false, message: 'Invalid password' };
       }
-
-      // Update last login
       user.lastLogin = new Date().toISOString();
       storageManager.saveData(user.userId, 'profile', user);
-
-      // Set current user
       this.currentUser = user.userId;
       this.startSessionTimer();
-
       return { success: true, message: 'Login successful', userId: user.userId };
     } catch (error) {
       console.error('Error during login:', error);
-      return { success: false, message: 'Login failed' };
+      return { success: false, message: 'Login failed: ' + error.message };
     }
   }
 
@@ -188,9 +165,9 @@ class AuthManager {
     try {
       const users = [];
       const keys = Object.keys(localStorage);
-
+      const userPrefix = `${storageManager.storagePrefix}user_`;
       keys.forEach(key => {
-        if (key.includes('_profile')) {
+        if (key.startsWith(userPrefix) && key.includes('_profile')) {
           const data = localStorage.getItem(key);
           if (data) {
             const parsed = JSON.parse(data);
@@ -198,7 +175,6 @@ class AuthManager {
           }
         }
       });
-
       return users;
     } catch (error) {
       console.error('Error getting all users:', error);

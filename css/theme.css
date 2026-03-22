@@ -200,6 +200,18 @@ button:disabled {
     box-shadow: var(--shadow-md);
 }
 
+.btn-danger {
+    background-color: var(--color-error);
+    color: var(--color-white);
+    box-shadow: var(--shadow-md);
+}
+
+.btn-danger:hover:not(:disabled) {
+    background-color: #dc2626;
+    box-shadow: var(--shadow-lg);
+    transform: translateY(-2px);
+}
+
 .btn-success {
     background-color: var(--color-success);
     color: var(--color-white);

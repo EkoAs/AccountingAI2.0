@@ -35,15 +35,11 @@ class StorageManager {
         timestamp: new Date().toISOString(),
         version: this.version
       };
-      
       const jsonString = JSON.stringify(dataWithMetadata);
-      
-      // Check storage size
       if (this.getStorageSize() + jsonString.length > this.maxStorageSize) {
         console.warn('Storage quota approaching limit');
         return false;
       }
-      
       localStorage.setItem(key, jsonString);
       return true;
     } catch (error) {
@@ -62,11 +58,7 @@ class StorageManager {
     try {
       const key = this.generateKey(userId, dataType);
       const jsonString = localStorage.getItem(key);
-      
-      if (!jsonString) {
-        return null;
-      }
-      
+      if (!jsonString) return null;
       const dataWithMetadata = JSON.parse(jsonString);
       return dataWithMetadata.data;
     } catch (error) {

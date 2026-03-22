@@ -49,6 +49,36 @@
 
 /* Mobile Styles (< 768px) */
 @media (max-width: 767px) {
+    /* Welcome Section */
+    .welcome-card {
+        padding: var(--spacing-xl) var(--spacing-lg);
+    }
+
+    .welcome-card h2 {
+        font-size: var(--font-size-2xl);
+    }
+
+    .welcome-content {
+        grid-template-columns: 1fr;
+        gap: var(--spacing-lg);
+    }
+
+    .features-grid {
+        grid-template-columns: repeat(3, 1fr);
+    }
+
+    .feature-item {
+        padding: var(--spacing-sm);
+    }
+
+    .feature-icon {
+        font-size: var(--font-size-2xl);
+    }
+
+    .feature-text {
+        font-size: var(--font-size-xs);
+    }
+
     /* Header */
     .header-container {
         padding: 0 var(--spacing-md);
@@ -62,8 +92,33 @@
         display: flex;
     }
 
+    .hamburger.active span:nth-child(1) {
+        transform: rotate(45deg) translate(8px, 8px);
+    }
+
+    .hamburger.active span:nth-child(2) {
+        opacity: 0;
+    }
+
+    .hamburger.active span:nth-child(3) {
+        transform: rotate(-45deg) translate(7px, -7px);
+    }
+
     .nav-menu {
         display: none;
+        position: absolute;
+        top: 70px;
+        right: 0;
+        background-color: var(--color-charcoal);
+        flex-direction: column;
+        width: 100%;
+        padding: var(--spacing-md);
+        border-bottom: 1px solid var(--color-gray-600);
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    }
+
+    .nav-menu.active {
+        display: flex;
     }
 
     .user-info {
@@ -283,6 +338,37 @@
 
 /* Extra Small Devices (< 480px) */
 @media (max-width: 479px) {
+    /* Welcome Section */
+    .welcome-card {
+        padding: var(--spacing-lg) var(--spacing-md);
+    }
+
+    .welcome-card h2 {
+        font-size: var(--font-size-xl);
+    }
+
+    .welcome-subtitle {
+        font-size: var(--font-size-base);
+    }
+
+    .welcome-intro h3,
+    .welcome-form h3 {
+        font-size: var(--font-size-lg);
+    }
+
+    .guide-list li {
+        padding: var(--spacing-sm);
+        font-size: var(--font-size-sm);
+    }
+
+    .features-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+
+    .feature-icon {
+        font-size: var(--font-size-xl);
+    }
+
     .logo {
         font-size: var(--font-size-lg);
     }

@@ -194,41 +194,163 @@ class AccountingCalculator {
   }
 
   /**
-   * Suggest account classification
+   * Suggest account classification with enhanced logic
    * @param {string} description - Transaction description
    * @param {array} chartOfAccounts - Chart of accounts
    * @returns {object} Classification suggestion
    */
   suggestAccountClassification(description, chartOfAccounts) {
     const lowerDesc = description.toLowerCase();
-    const keywords = {
-      'cash': '1000', 'bank': '1010', 'receivable': '1100',
-      'inventory': '1200', 'supplies': '1500', 'equipment': '1800',
-      'payable': '2000', 'debt': '2100', 'accrued': '2200',
-      'revenue': '4000', 'sales': '4000', 'service': '4100',
-      'salary': '5100', 'rent': '5200', 'utilities': '5300',
-      'office': '5400', 'depreciation': '5500', 'insurance': '5600',
-      'marketing': '5700', 'interest': '5800'
+    
+    // Enhanced keyword mapping with better categorization
+    // Order matters - check more specific keywords first
+    const keywordMap = {
+      // Payable/Hutang (2000) - MUST CHECK FIRST before Expense
+      '2000': {
+        keywords: ['hutang', 'utang', 'payable', 'payables', 'hutang usaha', 'hutang_usaha'],
+        confidence: 0.95
+      },
+      
+      // Debt/Pinjaman (2100)
+      '2100': {
+        keywords: ['pinjaman', 'loan', 'kredit', 'cicilan'],
+        confidence: 0.95
+      },
+      
+      // Salary/Gaji (5100) - CHECK BEFORE general expense
+      '5100': {
+        keywords: ['gaji', 'upah', 'honor', 'salary', 'wage', 'bayar karyawan', 'tunjangan', 'bebangaji', 'beban_gaji'],
+        confidence: 0.95
+      },
+      
+      // Interest/Bunga (5800) - CHECK BEFORE general expense
+      '5800': {
+        keywords: ['bunga', 'interest', 'riba', 'bunga_bank', 'beban_bunga'],
+        confidence: 0.95
+      },
+      
+      // Rent/Sewa (5200)
+      '5200': {
+        keywords: ['sewa', 'rental', 'rent', 'kos', 'tempat', 'ruang'],
+        confidence: 0.9
+      },
+      
+      // Utilities/Listrik (5300)
+      '5300': {
+        keywords: ['listrik', 'air', 'internet', 'telepon', 'wifi', 'pulsa', 'token',
+                   'utilitas', 'utilities', 'pln', 'pam', 'beban_listrik', 'beban_air'],
+        confidence: 0.9
+      },
+      
+      // Depreciation/Penyusutan (5500)
+      '5500': {
+        keywords: ['penyusutan', 'depreciation', 'depresiasi'],
+        confidence: 0.95
+      },
+      
+      // Insurance/Asuransi (5600)
+      '5600': {
+        keywords: ['asuransi', 'insurance', 'premi'],
+        confidence: 0.9
+      },
+      
+      // Marketing/Pemasaran (5700)
+      '5700': {
+        keywords: ['marketing', 'pemasaran', 'iklan', 'promosi', 'advertise', 'ads'],
+        confidence: 0.9
+      },
+      
+      // Equipment/Peralatan (1800) - CHECK BEFORE general supplies
+      '1800': {
+        keywords: ['komputer', 'laptop', 'printer', 'meja', 'kursi', 'lemari', 'rak',
+                   'mobil', 'motor', 'kendaraan', 'furniture', 'peralatan', 'equipment',
+                   'mesin', 'ac', 'kulkas', 'dispenser', 'meja kerja', 'kursi kerja'],
+        confidence: 0.9
+      },
+      
+      // Supplies/Perlengkapan (5400) - CHECK LAST as fallback
+      '5400': {
+        keywords: ['pulpen', 'kertas', 'tinta', 'sticky', 'penghapus', 'penggaris', 
+                   'stapler', 'klip', 'map', 'amplop', 'buku tulis', 'pensil', 'spidol',
+                   'perlengkapan', 'supplies', 'alat tulis', 'kantor', 'buku'],
+        confidence: 0.9
+      },
+      
+      // Inventory (1200)
+      '1200': {
+        keywords: ['barang', 'stok', 'inventory', 'persediaan', 'dagangan'],
+        confidence: 0.85
+      },
+      
+      // Bank (1010)
+      '1010': {
+        keywords: ['bank', 'rekening', 'transfer', 'deposit'],
+        confidence: 0.9
+      },
+      
+      // Cash (1000)
+      '1000': {
+        keywords: ['tunai', 'cash', 'uang', 'kas'],
+        confidence: 0.9
+      }
     };
 
-    let suggestedCode = '5400', confidence = 0.3;
-    for (const [keyword, code] of Object.entries(keywords)) {
-      if (lowerDesc.includes(keyword)) {
-        suggestedCode = code;
-        confidence = 0.8;
+    // Find best matching account
+    // Check in order of priority (more specific first)
+    let bestMatch = { code: '5400', confidence: 0.3 }; // Default to Miscellaneous Expense
+    
+    // Priority order: check most specific keywords first
+    const priorityOrder = ['2000', '2100', '5100', '5800', '5200', '5300', '5500', '5600', '5700', '1800', '5400', '1200', '1010', '1000'];
+    
+    for (const code of priorityOrder) {
+      const data = keywordMap[code];
+      if (!data) continue;
+      
+      for (const keyword of data.keywords) {
+        if (lowerDesc.includes(keyword)) {
+          bestMatch = { code, confidence: data.confidence };
+          break; // Found a match, stop searching
+        }
+      }
+      
+      // If we found a match, stop checking other codes
+      if (bestMatch.code !== '5400' || bestMatch.confidence > 0.3) {
         break;
       }
     }
 
-    const account = chartOfAccounts.find(a => a.code === suggestedCode);
+    // Find account in chart of accounts
+    let account = chartOfAccounts.find(a => a.code === bestMatch.code);
+    
+    if (!account) {
+      if (chartOfAccounts && chartOfAccounts.length > 0) {
+        account = chartOfAccounts[0];
+      } else {
+        account = {
+          code: bestMatch.code,
+          name: 'Miscellaneous Expense',
+          type: 'Expense'
+        };
+      }
+    }
+
     const debitCredit = this.getDefaultDebitCredit(account.type);
 
-    return {
-      accountCode: suggestedCode,
+    console.log('Classification:', {
+      description: lowerDesc,
+      suggestedCode: bestMatch.code,
       accountName: account.name,
       accountType: account.type,
       debitCredit: debitCredit,
-      confidence: confidence
+      confidence: bestMatch.confidence
+    });
+
+    return {
+      accountCode: account.code,
+      accountName: account.name,
+      accountType: account.type,
+      debitCredit: debitCredit,
+      confidence: bestMatch.confidence
     };
   }
 }
