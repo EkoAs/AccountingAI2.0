@@ -1,311 +1,157 @@
 # Accounting Ledger System - By Eko Asif
 
-Sistem buku besar akuntansi otomatis berbasis web dengan klasifikasi berbasis AI (Gemini). Aplikasi ini memungkinkan pengguna untuk memasukkan transaksi dalam format natural language, dan sistem akan secara otomatis mengklasifikasikan ke akun yang tepat menggunakan AI, kemudian menampilkan laporan akuntansi real-time dan menghasilkan PDF profesional.
+Sistem buku besar akuntansi otomatis berbasis web dengan klasifikasi AI (Gemini). Masukkan transaksi dalam format natural language, sistem otomatis mengklasifikasi ke akun yang tepat sesuai standar PSAK, lalu menampilkan laporan akuntansi real-time.
 
-## 🎯 Fitur Utama
+Mendukung **perusahaan jasa** maupun **perusahaan dagang**.
 
-### ✅ Input Transaksi Natural Language
-- Masukkan transaksi dalam format sederhana: `item_name amount quantity date`
-- Contoh: `pulpen 3000 45 2025-01-15`
-- Tanggal otomatis diisi dengan hari ini jika tidak diberikan
+## Fitur Utama
 
-### ✅ Klasifikasi AI Berbasis Gemini
-- Integrasi dengan Gemini API untuk klasifikasi otomatis
-- Fallback ke klasifikasi lokal jika AI tidak tersedia
-- Confidence score untuk setiap klasifikasi
-- Rate limiting: 100 requests/jam per user
+- Input Natural Language — Format: `nama_item harga_satuan kuantitas tanggal`
+- AI Double-Entry — Setiap transaksi otomatis menghasilkan 2 baris jurnal (Debit + Kredit)
+- 4 Jenis Laporan — General Journal, General Ledger, Trial Balance, Reversing Journal
+- Standar PSAK — Saldo normal per kelompok akun, persamaan akuntansi A = L + E
+- PDF Export — Download laporan profesional
+- Undo/Redo — Batalkan atau ulangi transaksi
+- Responsive — Optimal di HP, tablet, dan laptop
 
-### ✅ 4 Jenis Laporan Akuntansi
-1. **General Journal** - Catatan kronologis semua transaksi
-2. **General Ledger** - Transaksi diorganisir per akun
-3. **Trial Balance** - Verifikasi persamaan akuntansi
-4. **Reversing Journal** - Pembalikan entri akrual
+## Quick Start
 
-### ✅ Standar Akuntansi Penuh
-- Double-entry bookkeeping
-- Persamaan akuntansi: Assets = Liabilities + Equity
-- 60+ chart of accounts standar
-- Debit/credit rules per jenis akun
-- Validasi persamaan akuntansi sebelum finalisasi
+1. Buka `index.html` di browser (atau gunakan Live Server di `127.0.0.1:5500`)
+2. Isi nama perusahaan, judul laporan, nama penyusun
+3. Klik **Mulai Sekarang**
+4. Masukkan transaksi di input field, tekan Enter
+5. Review klasifikasi AI → klik **Confirm**
 
-### ✅ PDF Generation
-- Generate laporan dalam format PDF profesional
-- Header dengan informasi organisasi
-- Tabel terformat dengan borders dan styling
-- Footer dengan nomor halaman
-- Automatic page breaks untuk data besar
-
-### ✅ Multi-User Support
-- Registrasi dan login user
-- Data isolation per user
-- Session management (30 menit timeout)
-- Password hashing
-
-### ✅ Responsive Design
-- Gray space metallic theme
-- Desktop (≥1024px): 30% input panel, 70% display panel
-- Tablet (768-1023px): Full width stacked layout
-- Mobile (<768px): Optimized untuk layar kecil
-- Dark mode support
-
-### ✅ Data Management
-- Undo/redo functionality
-- Auto-save ke localStorage
-- Export/import data (JSON)
-- Automatic backup
-
-## 🚀 Quick Start
-
-### 1. Clone Repository
-```bash
-git clone https://github.com/yourusername/accounting-ledger-system.git
-cd accounting-ledger-system
-```
-
-### 2. Setup Gemini API Key
-```bash
-# Buka aplikasi di browser
-# Klik Settings → Masukkan Gemini API key
-# Atau set di localStorage:
+### Setup Gemini API Key (Opsional)
+```javascript
+// Di browser console:
 localStorage.setItem('gemini_api_key', 'your_api_key_here');
 ```
+Tanpa API key, sistem menggunakan klasifikasi lokal berbasis aturan PSAK.
 
-### 3. Deploy ke GitHub Pages
-```bash
-# Install dependencies
-npm install
-
-# Build
-npm run build
-
-# Deploy
-npm run deploy
-```
-
-## 📋 Struktur Proyek
+## Struktur Proyek
 
 ```
 accounting-ledger-system/
-├── index.html                 # Main HTML file
+├── index.html
 ├── css/
-│   ├── theme.css             # Gray space metallic theme
-│   ├── styles.css            # Main styles
-│   └── responsive.css        # Responsive design
+│   ├── theme.css          # Variabel warna & tipografi
+│   ├── styles.css         # Layout & komponen
+│   └── responsive.css     # Breakpoint mobile/tablet/desktop
 ├── js/
 │   ├── modules/
-│   │   ├── storage.js        # localStorage management
-│   │   ├── auth.js           # User authentication
-│   │   ├── transaction.js    # Transaction management
-│   │   ├── accounting.js     # Accounting calculations
-│   │   ├── ai-classifier.js  # Gemini AI integration
-│   │   ├── report-generator.js # Report generation
-│   │   └── pdf-generator.js  # PDF generation
-│   ├── app.js                # Main application controller
-│   ├── ui.js                 # UI manager
-│   └── main.js               # Event handlers
-├── .github/
-│   └── workflows/
-│       └── deploy.yml        # GitHub Actions deployment
-├── .env.example              # Environment variables template
-├── package.json              # Dependencies
-└── README.md                 # This file
+│   │   ├── storage.js     # localStorage management
+│   │   ├── auth.js        # Chart of accounts & profil
+│   │   ├── transaction.js # Parse & simpan transaksi
+│   │   ├── accounting.js  # Kalkulasi double-entry & PSAK
+│   │   ├── ai-classifier.js # Gemini AI + fallback lokal
+│   │   ├── report-generator.js # Generate 4 jenis laporan
+│   │   └── pdf-generator.js    # Export PDF
+│   ├── app.js             # Controller utama
+│   ├── ui.js              # UI manager
+│   └── main.js            # Event handlers
+└── README.md
 ```
 
-## 🔧 Konfigurasi
+## Aturan Saldo Normal (PSAK)
 
-### Environment Variables
-Buat file `.env` berdasarkan `.env.example`:
+| Kelompok | Kode | Bertambah | Berkurang | Saldo Normal |
+|----------|------|-----------|-----------|--------------|
+| Aset | 1xxx | Debit | Kredit | Debit |
+| Liabilitas | 2xxx | Kredit | Debit | Kredit |
+| Ekuitas | 3xxx | Kredit | Debit | Kredit |
+| Pendapatan | 4xxx | Kredit | Debit | Kredit |
+| Beban/HPP | 5xxx | Debit | Kredit | Debit |
 
-```env
-VITE_GEMINI_API_KEY=your_gemini_api_key_here
-VITE_APP_NAME=Accounting System
-VITE_ENABLE_AI_CLASSIFICATION=true
-VITE_API_RATE_LIMIT=100
+## Pola AI Classifier — Perusahaan Dagang
+
+| Kata Kunci Input | Debit | Kredit | Keterangan |
+|-----------------|-------|--------|------------|
+| `pembelian_kredit`, `syarat_kredit`, `n/30`, `2/15` | Pembelian (5010) | Utang Dagang (2000) | Beli barang dagangan kredit |
+| `pembelian_tunai`, `beli_tunai` | Pembelian (5010) | Kas (1000) | Beli barang dagangan tunai |
+| `retur_pembelian`, `retur_beli` | Utang Dagang (2000) | Retur Pembelian (5020) | Kembalikan barang ke supplier |
+| `potongan_pembelian` | Utang Dagang (2000) | Potongan Pembelian (5030) | Diskon dari supplier |
+| `beban_angkut_pembelian`, `ongkir_beli` | Beban Angkut Pembelian (5040) | Kas (1000) | Ongkos angkut masuk |
+| `penjualan_kredit`, `jual_kredit` | Piutang Dagang (1100) | Penjualan (4000) | Jual barang kredit |
+| `penjualan_tunai`, `jual_tunai` | Kas (1000) | Penjualan (4000) | Jual barang tunai |
+| `retur_penjualan`, `retur_jual` | Retur Penjualan (4100) | Piutang Dagang (1100) | Barang dikembalikan pembeli |
+| `potongan_penjualan`, `diskon_jual` | Potongan Penjualan (4200) | Piutang Dagang (1100) | Diskon ke pembeli |
+| `beban_angkut_penjualan`, `ongkir`, `kirim_barang` | Beban Angkut Penjualan (5750) | Kas (1000) | Ongkos kirim ke pembeli |
+| `penerimaan_piutang`, `terima_pelunasan` | Kas (1000) | Piutang Dagang (1100) | Terima pembayaran dari pembeli |
+| `bayar_utang_dagang`, `lunasi_utang` | Utang Dagang (2000) | Kas (1000) | Bayar ke supplier |
+| `beban_iklan`, `iklan`, `reklame` | Beban Iklan (5710) | Kas (1000) | Biaya iklan/promosi |
+
+## Pola AI Classifier — Perusahaan Jasa & Umum
+
+| Kata Kunci Input | Debit | Kredit | Keterangan |
+|-----------------|-------|--------|------------|
+| `modal`, `investor`, `setoran` | Kas (1000) | Modal Pemilik (3000) | Uang masuk dari pemilik/investor = Ekuitas |
+| `prive`, `penarikan` | Prive (3100) | Kas (1000) | Penarikan pemilik |
+| `pendapatan`, `jasa` | Kas (1000) | Penjualan (4000) | Pendapatan jasa tunai |
+| `piutang`, `jasa_kredit` | Piutang Dagang (1100) | Penjualan (4000) | Jasa belum dibayar klien |
+| `gaji`, `upah` | Beban Gaji (5100) | Kas (1000) | Bayar gaji tunai |
+| `sewa` | Beban Sewa (5200) | Kas (1000) | Bayar sewa tunai |
+| `listrik`, `air`, `wifi` | Beban Listrik (5300) | Kas (1000) | Bayar utilitas tunai |
+| `perlengkapan`, `atk`, `pulpen` | Beban Perlengkapan (5400) | Kas (1000) | Beli tunai |
+| `perlengkapan_belum_dibayar`, `atk_kredit` | Beban Perlengkapan (5400) | Utang Dagang (2000) | Belum dibayar = Utang, bukan Kas |
+| `peralatan_belum_dibayar` | Peralatan (1800) | Utang Dagang (2000) | Beli peralatan kredit |
+| `komputer`, `laptop`, `peralatan` | Peralatan (1800) | Kas (1000) | Beli peralatan tunai |
+| `pinjaman`, `loan` | Kas (1000) | Utang Bank (2100) | Pinjaman masuk |
+
+> Catatan penting:
+> - `investor` / `modal` → Ekuitas (3000), BUKAN Beban. Uang dari investor menambah modal.
+> - `belum_dibayar` → Utang Dagang (2000), BUKAN Kas. Jika belum dibayar, kas tidak berkurang.
+> - Syarat kredit seperti `2/15, n/30` → pembelian kredit, bukan tunai.
+
+## Contoh Input — PT. Karya Usaha (Perusahaan Dagang)
+
+```
+modal_awal 50000000 1 2025-01-01
+pembelian_kredit 10000000 1 2025-01-05
+penjualan_kredit 15000000 1 2025-01-10
+penjualan_tunai 5000000 1 2025-01-12
+retur_penjualan 500000 1 2025-01-14
+beban_angkut_penjualan 200000 1 2025-01-15
+beban_iklan 300000 1 2025-01-20
+bayar_utang_dagang 10000000 1 2025-01-25
+penerimaan_piutang 14500000 1 2025-01-28
 ```
 
-### Gemini API Setup
-1. Buka [Google AI Studio](https://aistudio.google.com)
-2. Buat API key baru
-3. Masukkan ke aplikasi atau `.env` file
+## Contoh Input — Perusahaan Jasa
 
-## 📊 Cara Penggunaan
-
-### 1. Registrasi/Login
-- Klik "Register here" untuk membuat akun baru
-- Atau login dengan email dan password yang sudah terdaftar
-
-### 2. Input Transaksi
-- Masukkan transaksi di input field
-- Format: `item_name amount quantity date`
-- Tekan Enter atau klik tombol submit
-- Sistem akan mengklasifikasi otomatis
-
-### 3. Konfirmasi Transaksi
-- Review klasifikasi AI
-- Klik "Confirm" untuk menyimpan
-- Atau "Adjust" untuk mengubah manual
-
-### 4. Lihat Laporan
-- Pilih jenis laporan dari dropdown
-- Laporan akan update real-time
-- Lihat summary (Total Debits, Credits, Status)
-
-### 5. Generate PDF
-- Klik "Generate PDF" untuk download laporan
-- File akan tersimpan dengan nama: `report_type_date.pdf`
-
-### 6. Export Data
-- Klik "Export Data" untuk backup
-- File JSON akan di-download
-- Bisa di-import kembali nanti
-
-## 🔐 Keamanan
-
-### Password
-- Hashing client-side (simple hash untuk demo)
-- Untuk production, gunakan bcrypt library
-
-### API Key
-- Disimpan di localStorage (user's browser)
-- Tidak dikirim ke server
-- Gunakan GitHub Secrets untuk deployment
-
-### Data Privacy
-- Semua data disimpan di browser (localStorage)
-- Tidak ada server backend
-- User data tidak dikirim ke pihak ketiga
-
-## 📱 Browser Support
-
-- Chrome/Edge: ✅ Full support
-- Firefox: ✅ Full support
-- Safari: ✅ Full support
-- Mobile browsers: ✅ Responsive design
-
-## 🎨 Tema
-
-### Gray Space Metallic
-- Deep Space Gray: `#1a1a2e`
-- Metallic Silver: `#c0c0c0`
-- Light Gray: `#e8e8e8`
-- Charcoal: `#2d2d44`
-
-### Accent Colors
-- Success: `#4ade80`
-- Warning: `#fb923c`
-- Error: `#ef4444`
-- Info: `#3b82f6`
-
-## 📈 Standar Akuntansi
-
-### Chart of Accounts
-- **Assets (1000-1999)**: Cash, Bank, Receivable, Inventory, Supplies, Equipment
-- **Liabilities (2000-2999)**: Payable, Debt, Accrued Expenses
-- **Equity (3000-3999)**: Stock, Retained Earnings, Dividends
-- **Revenue (4000-4999)**: Sales, Service, Interest Income
-- **Expenses (5000-5999)**: COGS, Salaries, Rent, Utilities, Office Supplies, Depreciation, Insurance, Marketing, Interest
-
-### Debit/Credit Rules
-- **Assets**: Debit ↑, Credit ↓
-- **Liabilities**: Debit ↓, Credit ↑
-- **Equity**: Debit ↓, Credit ↑
-- **Revenue**: Debit ↓, Credit ↑
-- **Expenses**: Debit ↑, Credit ↓
-
-### Accounting Equation
 ```
-Assets = Liabilities + Equity
+modal_awal 50000000 1 2025-01-01
+gaji 3000000 1 2025-01-05
+sewa 1500000 1 2025-01-05
+perlengkapan_belum_dibayar 500000 1 2025-01-10
+pendapatan_jasa 5000000 1 2025-01-15
+investor 10000000 1 2025-01-20
 ```
 
-Sistem memvalidasi persamaan ini sebelum finalisasi transaksi.
+## Responsive Design
 
-## 🐛 Troubleshooting
+- Desktop (≥1024px): Layout 2 kolom — input panel kiri (340px), laporan kanan
+- Tablet (768–1023px): Layout 1 kolom, stacked
+- Mobile (<768px): Layout 1 kolom, tombol full-width, tabel scroll horizontal
 
-### API Key Error
-- Pastikan API key valid dari Google AI Studio
-- Check rate limit (100 requests/hour)
-- Sistem akan fallback ke klasifikasi lokal jika AI error
+## Tema
 
-### Data Tidak Tersimpan
-- Check browser localStorage quota (5MB limit)
-- Export data jika mendekati limit
-- Clear old backups jika perlu
+- Background: `#1c1c1c` (abu-abu gelap)
+- Panel: `#2e2e2e` (charcoal)
+- Silver: `#c0c0c0`
+- Success: `#4ade80` | Warning: `#fb923c` | Error: `#ef4444`
 
-### PDF Tidak Generate
-- Pastikan jsPDF library loaded
-- Check browser console untuk error
-- Coba di browser lain
+## Troubleshooting
 
-### Transaksi Tidak Seimbang
-- Check total debits vs credits
-- Lihat discrepancy amount di status
-- Adjust transaksi yang salah
+| Masalah | Solusi |
+|---------|--------|
+| Tombol Mulai tidak bisa diklik | Pastikan nama perusahaan diisi |
+| Transaksi tidak balance | Setiap input menghasilkan 2 baris otomatis — cek apakah ada transaksi lama dari sesi sebelumnya |
+| AI salah klasifikasi | Gunakan keyword spesifik seperti `pembelian_kredit`, `penjualan_tunai`, `perlengkapan_belum_dibayar` |
+| PDF tidak generate | Pastikan status "✓ Balanced" sebelum generate PDF |
+| Data hilang setelah update | Chart of accounts diperbarui — klik Reset All Data lalu input ulang transaksi |
+| Data hilang | Data tersimpan di localStorage browser — jangan clear browser data |
 
-## 📚 API Reference
+## Author
 
-### App Methods
-```javascript
-// User Management
-app.registerUser(email, password)
-app.loginUser(email, password)
-app.logoutUser()
-
-// Transaction Processing
-await app.processTransactionInput(input)
-app.confirmTransaction(data)
-app.updateTransaction(id, updates)
-app.deleteTransaction(id)
-
-// Undo/Redo
-app.undo()
-app.redo()
-
-// Reports
-app.generateReport(type)
-await app.generateAndDownloadPDF(type)
-
-// Verification
-app.verifyAccountingEquation()
-app.finalizeTransactions()
-
-// Profile
-app.updateUserProfile(updates)
-app.exportUserData()
-app.importUserData(data)
-```
-
-## 🤝 Contributing
-
-Kontribusi sangat diterima! Silakan:
-1. Fork repository
-2. Buat branch feature (`git checkout -b feature/AmazingFeature`)
-3. Commit changes (`git commit -m 'Add some AmazingFeature'`)
-4. Push ke branch (`git push origin feature/AmazingFeature`)
-5. Open Pull Request
-
-## 📄 License
-
-MIT License - lihat file LICENSE untuk detail
-
-## 👨‍💻 Author
-
-**Eko Asif**
-- GitHub: [@ekoasif](https://github.com/ekoasif)
-- Email: eko@example.com
-
-## 🙏 Acknowledgments
-
-- Gemini API untuk AI classification
-- jsPDF untuk PDF generation
-- GitHub Pages untuk hosting
-
-## 📞 Support
-
-Untuk pertanyaan atau issue:
-1. Buka GitHub Issues
-2. Jelaskan masalah dengan detail
-3. Sertakan screenshot jika perlu
-
----
-
-**Dibuat dengan ❤️ untuk memudahkan akuntansi**
+**Eko Asif** — Accounting By Eko Asif

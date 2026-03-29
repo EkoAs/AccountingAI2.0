@@ -347,8 +347,9 @@
 
 .app-layout {
     display: grid;
-    grid-template-columns: 30% 1fr;
+    grid-template-columns: 340px 1fr;
     gap: var(--spacing-lg);
+    align-items: start;
     min-height: calc(100vh - 120px);
 }
 
@@ -534,12 +535,17 @@
 /* Action Buttons */
 .action-buttons {
     display: flex;
-    gap: var(--spacing-md);
+    flex-wrap: wrap;
+    gap: var(--spacing-sm);
     margin-top: auto;
 }
 
 .action-buttons button {
     flex: 1;
+    min-width: 0;
+    font-size: var(--font-size-sm);
+    padding: var(--spacing-sm) var(--spacing-sm);
+    white-space: nowrap;
 }
 
 /* Display Panel */
@@ -766,4 +772,100 @@
 
 .modal-footer button {
     min-width: 100px;
+}
+
+/* ── General Ledger Card Layout ─────────────────────────────────────── */
+
+/* Account header block */
+.report-table tr.ledger-account-header td {
+    background-color: var(--color-deep-space);
+    padding: var(--spacing-sm) var(--spacing-md);
+    border: 1px solid var(--color-metallic-silver);
+}
+
+.ledger-account-meta {
+    display: flex;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: var(--spacing-xs);
+    margin-bottom: var(--spacing-xs);
+}
+
+.ledger-meta-left,
+.ledger-meta-right {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    font-size: var(--font-size-sm);
+    color: var(--color-metallic-silver);
+}
+
+.ledger-balance-summary {
+    display: flex;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: var(--spacing-sm);
+    padding-top: var(--spacing-xs);
+    border-top: 1px solid rgba(192,192,192,0.3);
+    margin-top: var(--spacing-xs);
+}
+
+.ledger-balance-group {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    font-size: var(--font-size-sm);
+    color: var(--color-light-gray);
+}
+
+.ledger-balance-group strong {
+    color: var(--color-metallic-silver);
+}
+
+/* Column headers inside each account */
+.report-table tr.ledger-col-header th,
+.report-table tr.ledger-col-subheader th {
+    background-color: var(--color-charcoal);
+    color: var(--color-metallic-silver);
+    text-align: center;
+    padding: var(--spacing-xs) var(--spacing-sm);
+    font-size: var(--font-size-sm);
+    border: 1px solid rgba(192,192,192,0.2);
+}
+
+.report-table tr.ledger-col-header th.saldo-header {
+    text-align: center;
+}
+
+.report-table tr.ledger-col-subheader th:nth-child(6),
+.report-table tr.ledger-col-subheader th:nth-child(7) {
+    text-align: right;
+}
+
+/* Ref column */
+.report-table td.ref-col {
+    text-align: center;
+    font-size: var(--font-size-xs);
+    color: var(--color-gray-500);
+    font-family: monospace;
+}
+
+/* Total row per account */
+.report-table tr.ledger-total-row td {
+    background-color: rgba(192,192,192,0.08);
+    border-top: 2px solid var(--color-metallic-silver);
+    font-size: var(--font-size-sm);
+}
+
+/* Spacer between accounts */
+.report-table tr.ledger-spacer td {
+    height: 16px;
+    background: transparent;
+    border: none;
+}
+
+/* Total row for journal/trial balance */
+.report-table tr.total-row td {
+    background-color: rgba(192,192,192,0.08);
+    border-top: 2px solid var(--color-metallic-silver);
 }

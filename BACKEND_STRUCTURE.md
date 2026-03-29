@@ -36,12 +36,12 @@ Backend modules telah dibuat dengan standar akuntansi penuh dan siap untuk integ
 - Multi-user support dengan data isolation
 - Default chart of accounts (60+ accounts) sesuai standar akuntansi
 
-**Chart of Accounts Includes:**
-- Assets (1000-1999): Cash, Bank, Receivable, Inventory, Supplies, Equipment
-- Liabilities (2000-2999): Payable, Debt, Accrued Expenses, Unearned Revenue
-- Equity (3000-3999): Stock, Retained Earnings, Dividends
-- Revenue (4000-4999): Sales, Service, Interest Income
-- Expenses (5000-5999): COGS, Salaries, Rent, Utilities, Office Supplies, Depreciation, Insurance, Marketing, Interest
+**Chart of Accounts Includes (PSAK Indonesia):**
+- Aset (1000-1999): Kas, Bank, Piutang Dagang, Persediaan Barang Dagangan, Perlengkapan, Peralatan
+- Liabilitas (2000-2999): Utang Dagang, Utang Bank, Beban Masih Harus Dibayar, Pendapatan Diterima Dimuka
+- Ekuitas (3000-3999): Modal Pemilik, Prive
+- Pendapatan (4000-4999): Penjualan, Retur Penjualan, Potongan Penjualan, Pendapatan Lain-lain
+- Beban/HPP (5000-5999): Pembelian, Retur Pembelian, Potongan Pembelian, Beban Angkut Pembelian, Beban Gaji, Beban Sewa, Beban Listrik, Beban Perlengkapan, Beban Iklan, Beban Angkut Penjualan, Beban Bunga, dll.
 
 ### 3. **transaction.js** - Transaction Management
 - `parseTransactionInput(input)` - Parse input string (format: "item amount quantity date")
@@ -72,7 +72,8 @@ Backend modules telah dibuat dengan standar akuntansi penuh dan siap untuk integ
 - `verifyAccountingEquationByType(balances, coa)` - Verifikasi Assets = Liabilities + Equity
 - `generateTrialBalance(transactions, coa)` - Generate trial balance
 - `calculateNetIncome(transactions, coa)` - Hitung net income
-- `suggestAccountClassification(description, coa)` - Suggest akun berdasarkan deskripsi
+- `getDoubleEntryClassification(description, coa)` - Klasifikasi double-entry dengan pola PSAK (perusahaan jasa & dagang)
+- `suggestAccountClassification(description, coa)` - Legacy single-entry (kompatibilitas)
 
 **Key Features:**
 - Double-entry bookkeeping implementation
@@ -94,12 +95,12 @@ Backend modules telah dibuat dengan standar akuntansi penuh dan siap untuk integ
 - `clearCache()` - Clear response cache
 
 **Key Features:**
-- Secure API key management
+- Prompt engineering profesional untuk akuntansi PSAK
+- Mendukung pola perusahaan jasa dan perusahaan dagang
 - Rate limiting (100 requests/hour)
 - Response caching
-- Fallback to local classification
+- Fallback ke local classification
 - Graceful error handling
-- Prompt engineering untuk akuntansi
 
 ### 6. **report-generator.js** - Report Generation
 - `generateGeneralJournal(transactions, metadata)` - Generate general journal

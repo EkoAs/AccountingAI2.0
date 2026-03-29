@@ -226,34 +226,137 @@ class AccountingCalculator {
 
     // Double-entry pattern rules (ordered by specificity — more specific rules FIRST)
     const patterns = [
-      // ── KREDIT / BELUM DIBAYAR (harus di atas pola tunai) ──────────────────
-      // Perlengkapan belum dibayar / kredit → Debit Beban Perlengkapan, Kredit Utang Usaha
+      // ══════════════════════════════════════════════════════════════════════
+      // PERUSAHAAN DAGANG — PEMBELIAN
+      // ══════════════════════════════════════════════════════════════════════
+      // Pembelian kredit / syarat kredit (2/15,n/30) → Debit Pembelian, Kredit Utang Dagang
+      {
+        keywords: ['pembelian_kredit', 'beli_kredit', 'syarat_kredit', 'kredit_dagang',
+                   'n/30', '2/15', 'syarat_2', 'pembelian_dengan_syarat', 'beli_dagang_kredit'],
+        debit: '5010', credit: '2000',
+        reasoning: 'Pembelian barang dagangan kredit: Pembelian bertambah (Debit), Utang Dagang bertambah (Kredit) — syarat kredit berarti belum dibayar tunai',
+        confidence: 0.97
+      },
+      // Pembelian tunai barang dagangan → Debit Pembelian, Kredit Kas
+      {
+        keywords: ['pembelian_tunai', 'beli_tunai', 'beli_barang_tunai', 'pembelian_barang_tunai'],
+        debit: '5010', credit: '1000',
+        reasoning: 'Pembelian barang dagangan tunai: Pembelian bertambah (Debit), Kas berkurang (Kredit)',
+        confidence: 0.97
+      },
+      // Beban angkut pembelian → Debit Beban Angkut Pembelian, Kredit Kas
+      {
+        keywords: ['beban_angkut_pembelian', 'ongkir_beli', 'freight_in', 'angkut_pembelian',
+                   'ongkos_angkut_beli'],
+        debit: '5040', credit: '1000',
+        reasoning: 'Beban angkut pembelian: Beban Angkut Pembelian bertambah (Debit), Kas berkurang (Kredit)',
+        confidence: 0.97
+      },
+      // Retur pembelian → Debit Utang Dagang, Kredit Retur Pembelian
+      {
+        keywords: ['retur_pembelian', 'retur_beli', 'kembalikan_barang_beli', 'return_purchase',
+                   'retur_dan_potongan_pembelian'],
+        debit: '2000', credit: '5020',
+        reasoning: 'Retur pembelian: Utang Dagang berkurang (Debit), Retur Pembelian bertambah (Kredit)',
+        confidence: 0.97
+      },
+      // Potongan pembelian → Debit Utang Dagang, Kredit Potongan Pembelian
+      {
+        keywords: ['potongan_pembelian', 'diskon_beli', 'purchase_discount'],
+        debit: '2000', credit: '5030',
+        reasoning: 'Potongan pembelian: Utang Dagang berkurang (Debit), Potongan Pembelian bertambah (Kredit)',
+        confidence: 0.96
+      },
+      // Bayar utang dagang / pelunasan utang → Debit Utang Dagang, Kredit Kas
+      {
+        keywords: ['bayar_utang_dagang', 'lunasi_utang', 'pelunasan_utang', 'bayar_utang',
+                   'bayar_hutang_dagang', 'lunasi_hutang'],
+        debit: '2000', credit: '1000',
+        reasoning: 'Pelunasan utang dagang: Utang Dagang berkurang (Debit), Kas berkurang (Kredit)',
+        confidence: 0.97
+      },
+
+      // ══════════════════════════════════════════════════════════════════════
+      // PERUSAHAAN DAGANG — PENJUALAN
+      // ══════════════════════════════════════════════════════════════════════
+      // Penjualan kredit → Debit Piutang Dagang, Kredit Penjualan
+      {
+        keywords: ['penjualan_kredit', 'jual_kredit', 'jual_piutang', 'penjualan_dengan_piutang',
+                   'sales_credit'],
+        debit: '1100', credit: '4000',
+        reasoning: 'Penjualan kredit: Piutang Dagang bertambah (Debit), Penjualan bertambah (Kredit)',
+        confidence: 0.97
+      },
+      // Penjualan tunai → Debit Kas, Kredit Penjualan
+      {
+        keywords: ['penjualan_tunai', 'jual_tunai', 'jual_kas', 'sales_cash'],
+        debit: '1000', credit: '4000',
+        reasoning: 'Penjualan tunai: Kas bertambah (Debit), Penjualan bertambah (Kredit)',
+        confidence: 0.97
+      },
+      // Retur penjualan → Debit Retur Penjualan, Kredit Piutang Dagang
+      {
+        keywords: ['retur_penjualan', 'retur_jual', 'barang_dikembalikan_pembeli',
+                   'return_sales', 'retur_dan_potongan_penjualan'],
+        debit: '4100', credit: '1100',
+        reasoning: 'Retur penjualan: Retur Penjualan bertambah (Debit), Piutang Dagang berkurang (Kredit)',
+        confidence: 0.97
+      },
+      // Potongan penjualan → Debit Potongan Penjualan, Kredit Piutang Dagang
+      {
+        keywords: ['potongan_penjualan', 'diskon_jual', 'sales_discount', 'potongan_tunai_jual'],
+        debit: '4200', credit: '1100',
+        reasoning: 'Potongan penjualan: Potongan Penjualan bertambah (Debit), Piutang Dagang berkurang (Kredit)',
+        confidence: 0.96
+      },
+      // Beban angkut penjualan / ongkir → Debit Beban Angkut Penjualan, Kredit Kas
+      {
+        keywords: ['beban_angkut_penjualan', 'ongkir_jual', 'freight_out', 'angkut_penjualan',
+                   'beban_angkut', 'ongkir', 'kirim_barang', 'biaya_kirim'],
+        debit: '5750', credit: '1000',
+        reasoning: 'Beban angkut penjualan: Beban Angkut Penjualan bertambah (Debit), Kas berkurang (Kredit)',
+        confidence: 0.96
+      },
+      // Penerimaan piutang / pelunasan piutang → Debit Kas, Kredit Piutang Dagang
+      {
+        keywords: ['penerimaan_piutang', 'terima_pelunasan', 'bayar_piutang', 'pelunasan_piutang',
+                   'terima_pembayaran_piutang', 'lunasi_piutang'],
+        debit: '1000', credit: '1100',
+        reasoning: 'Penerimaan piutang: Kas bertambah (Debit), Piutang Dagang berkurang (Kredit)',
+        confidence: 0.97
+      },
+
+      // ══════════════════════════════════════════════════════════════════════
+      // KREDIT / BELUM DIBAYAR (harus di atas pola tunai generik)
+      // ══════════════════════════════════════════════════════════════════════
+      // Perlengkapan belum dibayar → Debit Beban Perlengkapan, Kredit Utang Dagang
       {
         keywords: ['perlengkapan_belum_dibayar', 'perlengkapan_kredit', 'beli_perlengkapan_kredit',
                    'supplies_kredit', 'atk_kredit', 'atk_belum_dibayar'],
         debit: '5400', credit: '2000',
-        reasoning: 'Perlengkapan belum dibayar: Beban Perlengkapan bertambah (Debit), Utang Usaha bertambah (Kredit) — bukan Kas karena belum dibayar tunai',
+        reasoning: 'Perlengkapan belum dibayar: Beban Perlengkapan bertambah (Debit), Utang Dagang bertambah (Kredit) — bukan Kas karena belum dibayar tunai',
         confidence: 0.97
       },
-      // Peralatan belum dibayar / kredit → Debit Peralatan, Kredit Utang Usaha
+      // Peralatan belum dibayar → Debit Peralatan, Kredit Utang Dagang
       {
         keywords: ['peralatan_belum_dibayar', 'peralatan_kredit', 'beli_peralatan_kredit',
                    'equipment_kredit', 'equipment_belum_dibayar'],
         debit: '1800', credit: '2000',
-        reasoning: 'Peralatan belum dibayar: Peralatan bertambah (Debit), Utang Usaha bertambah (Kredit) — bukan Kas karena belum dibayar tunai',
+        reasoning: 'Peralatan belum dibayar: Peralatan bertambah (Debit), Utang Dagang bertambah (Kredit) — bukan Kas karena belum dibayar tunai',
         confidence: 0.97
       },
-      // Pembelian kredit umum (belum dibayar) → Debit Beban/Aset, Kredit Utang Usaha
+      // Pembelian kredit umum (belum dibayar) → Debit Beban Perlengkapan, Kredit Utang Dagang
       {
-        keywords: ['belum_dibayar', 'kredit_beli', 'beli_kredit', 'hutang_usaha',
-                   'utang_usaha', 'payable', 'on_credit', 'kredit_pembelian'],
+        keywords: ['belum_dibayar', 'kredit_beli', 'hutang_usaha', 'utang_usaha',
+                   'payable', 'on_credit', 'kredit_pembelian'],
         debit: '5400', credit: '2000',
-        reasoning: 'Pembelian kredit/belum dibayar: Beban/Aset bertambah (Debit), Utang Usaha bertambah (Kredit)',
+        reasoning: 'Pembelian kredit/belum dibayar: Beban/Aset bertambah (Debit), Utang Dagang bertambah (Kredit)',
         confidence: 0.95
       },
 
-      // ── MODAL & EKUITAS ────────────────────────────────────────────────────
-      // Investor / modal awal / setoran pemilik → Debit Kas, Kredit Modal
+      // ══════════════════════════════════════════════════════════════════════
+      // MODAL & EKUITAS
+      // ══════════════════════════════════════════════════════════════════════
       {
         keywords: ['investor', 'investasi', 'modal', 'setoran', 'modal_awal',
                    'modal_usaha', 'capital', 'owner_equity', 'equity_in'],
@@ -261,7 +364,6 @@ class AccountingCalculator {
         reasoning: 'Setoran modal/investor: Kas bertambah (Debit), Modal Pemilik bertambah (Kredit) — uang masuk dari pemilik/investor adalah Ekuitas, bukan Beban',
         confidence: 0.98
       },
-      // Prive / penarikan pemilik → Debit Prive, Kredit Kas
       {
         keywords: ['prive', 'penarikan', 'ambil_uang', 'withdraw', 'drawing'],
         debit: '3100', credit: '1000',
@@ -269,25 +371,26 @@ class AccountingCalculator {
         confidence: 0.95
       },
 
-      // ── PENDAPATAN ─────────────────────────────────────────────────────────
-      // Pendapatan tunai → Debit Kas, Kredit Pendapatan
+      // ══════════════════════════════════════════════════════════════════════
+      // PENDAPATAN JASA
+      // ══════════════════════════════════════════════════════════════════════
       {
-        keywords: ['pendapatan', 'jasa', 'revenue', 'penjualan', 'service',
-                   'terima_pembayaran', 'bayar_jasa', 'income'],
+        keywords: ['pendapatan', 'jasa', 'revenue', 'service', 'terima_pembayaran',
+                   'bayar_jasa', 'income'],
         debit: '1000', credit: '4000',
         reasoning: 'Pendapatan jasa tunai: Kas bertambah (Debit), Pendapatan bertambah (Kredit)',
         confidence: 0.95
       },
-      // Piutang usaha → Debit Piutang, Kredit Pendapatan
       {
         keywords: ['piutang', 'receivable', 'kredit_jasa', 'jasa_kredit', 'jasa_belum_dibayar'],
         debit: '1100', credit: '4000',
-        reasoning: 'Piutang usaha: Piutang bertambah (Debit), Pendapatan bertambah (Kredit)',
+        reasoning: 'Piutang usaha: Piutang Dagang bertambah (Debit), Pendapatan bertambah (Kredit)',
         confidence: 0.93
       },
 
-      // ── ASET TETAP (tunai) ─────────────────────────────────────────────────
-      // Beli peralatan tunai → Debit Peralatan, Kredit Kas
+      // ══════════════════════════════════════════════════════════════════════
+      // ASET TETAP
+      // ══════════════════════════════════════════════════════════════════════
       {
         keywords: ['komputer', 'laptop', 'printer', 'meja', 'kursi', 'lemari', 'rak',
                    'mobil', 'motor', 'kendaraan', 'furniture', 'peralatan', 'equipment',
@@ -297,22 +400,21 @@ class AccountingCalculator {
         confidence: 0.92
       },
 
-      // ── BEBAN (tunai) ──────────────────────────────────────────────────────
-      // Bayar gaji → Debit Beban Gaji, Kredit Kas
+      // ══════════════════════════════════════════════════════════════════════
+      // BEBAN OPERASIONAL
+      // ══════════════════════════════════════════════════════════════════════
       {
         keywords: ['gaji', 'upah', 'honor', 'salary', 'wage', 'beban_gaji', 'bayar_gaji'],
         debit: '5100', credit: '1000',
         reasoning: 'Beban gaji: Beban Gaji bertambah (Debit), Kas berkurang (Kredit)',
         confidence: 0.97
       },
-      // Bayar sewa → Debit Beban Sewa, Kredit Kas
       {
         keywords: ['sewa', 'rental', 'rent', 'beban_sewa', 'bayar_sewa'],
         debit: '5200', credit: '1000',
         reasoning: 'Beban sewa: Beban Sewa bertambah (Debit), Kas berkurang (Kredit)',
         confidence: 0.95
       },
-      // Bayar listrik/utilitas → Debit Beban Listrik, Kredit Kas
       {
         keywords: ['listrik', 'air', 'internet', 'telepon', 'wifi', 'pulsa', 'token',
                    'pln', 'pam', 'beban_listrik', 'utilitas'],
@@ -320,7 +422,6 @@ class AccountingCalculator {
         reasoning: 'Beban utilitas: Beban Listrik/Air bertambah (Debit), Kas berkurang (Kredit)',
         confidence: 0.95
       },
-      // Beli perlengkapan tunai → Debit Beban Perlengkapan, Kredit Kas
       {
         keywords: ['pulpen', 'kertas', 'tinta', 'sticky', 'penghapus', 'penggaris',
                    'stapler', 'klip', 'amplop', 'pensil', 'spidol', 'alat_tulis',
@@ -329,21 +430,25 @@ class AccountingCalculator {
         reasoning: 'Beban perlengkapan tunai: Beban Perlengkapan bertambah (Debit), Kas berkurang (Kredit)',
         confidence: 0.92
       },
-      // Bayar asuransi → Debit Beban Asuransi, Kredit Kas
       {
         keywords: ['asuransi', 'insurance', 'premi'],
         debit: '5600', credit: '1000',
         reasoning: 'Beban asuransi: Beban Asuransi bertambah (Debit), Kas berkurang (Kredit)',
         confidence: 0.93
       },
-      // Bayar marketing → Debit Beban Marketing, Kredit Kas
+      // Beban iklan (lebih spesifik dari marketing)
       {
-        keywords: ['marketing', 'iklan', 'promosi', 'advertise', 'ads'],
+        keywords: ['beban_iklan', 'iklan', 'advertise', 'ads', 'reklame'],
+        debit: '5710', credit: '1000',
+        reasoning: 'Beban iklan: Beban Iklan bertambah (Debit), Kas berkurang (Kredit)',
+        confidence: 0.95
+      },
+      {
+        keywords: ['marketing', 'promosi', 'pemasaran'],
         debit: '5700', credit: '1000',
-        reasoning: 'Beban pemasaran: Beban Marketing bertambah (Debit), Kas berkurang (Kredit)',
+        reasoning: 'Beban pemasaran: Beban Pemasaran bertambah (Debit), Kas berkurang (Kredit)',
         confidence: 0.92
       },
-      // Bayar bunga → Debit Beban Bunga, Kredit Kas
       {
         keywords: ['bunga', 'interest', 'beban_bunga'],
         debit: '5800', credit: '1000',
@@ -351,15 +456,15 @@ class AccountingCalculator {
         confidence: 0.95
       },
 
-      // ── UTANG & PINJAMAN ───────────────────────────────────────────────────
-      // Hutang usaha generik → Debit Beban, Kredit Utang Usaha
+      // ══════════════════════════════════════════════════════════════════════
+      // UTANG & PINJAMAN
+      // ══════════════════════════════════════════════════════════════════════
       {
         keywords: ['hutang', 'utang', 'payable'],
         debit: '5400', credit: '2000',
-        reasoning: 'Pembelian kredit: Beban/Aset bertambah (Debit), Utang Usaha bertambah (Kredit)',
+        reasoning: 'Pembelian kredit: Beban/Aset bertambah (Debit), Utang Dagang bertambah (Kredit)',
         confidence: 0.88
       },
-      // Pinjaman bank → Debit Kas, Kredit Utang Bank
       {
         keywords: ['pinjaman', 'loan', 'kredit_bank', 'pinjam'],
         debit: '1000', credit: '2100',
@@ -367,8 +472,9 @@ class AccountingCalculator {
         confidence: 0.95
       },
 
-      // ── PERSEDIAAN ─────────────────────────────────────────────────────────
-      // Beli persediaan/barang dagangan → Debit Persediaan, Kredit Kas
+      // ══════════════════════════════════════════════════════════════════════
+      // PERSEDIAAN
+      // ══════════════════════════════════════════════════════════════════════
       {
         keywords: ['barang', 'stok', 'inventory', 'persediaan', 'dagangan', 'beli_barang'],
         debit: '1200', credit: '1000',

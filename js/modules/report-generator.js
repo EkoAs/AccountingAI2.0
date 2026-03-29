@@ -43,7 +43,8 @@ class ReportGenerator {
   }
 
   /**
-   * Generate General Ledger report
+   * Generate General Ledger report (T-account / running balance format per PSAK)
+   * Each account shows: header info, opening balance, transactions with running balance, totals
    * @param {array} transactions - All transactions
    * @param {array} chartOfAccounts - Chart of accounts
    * @param {object} metadata - Report metadata
@@ -51,47 +52,69 @@ class ReportGenerator {
    */
   generateGeneralLedger(transactions, chartOfAccounts, metadata) {
     const ledger = [];
+    const isDebitNormal = (type) => type === 'Asset' || type === 'Expense';
 
     chartOfAccounts.forEach(account => {
       const accountTransactions = transactions.filter(t => t.accountCode === account.code);
+      if (accountTransactions.length === 0) return;
 
-      if (accountTransactions.length > 0) {
-        const sorted = accountTransactions.sort((a, b) => new Date(a.date) - new Date(b.date));
-        const withBalance = accountingCalculator.calculateRunningBalance(sorted);
+      const sorted = accountTransactions.sort((a, b) => new Date(a.date) - new Date(b.date));
+      const debitNormal = isDebitNormal(account.type);
 
-        const totalDebits = sorted.reduce((sum, t) => sum + t.debitAmount, 0);
-        const totalCredits = sorted.reduce((sum, t) => sum + t.creditAmount, 0);
-        const closingBalance = totalDebits - totalCredits;
+      // Calculate running balance per PSAK normal balance rules
+      let runningDebit = 0;
+      let runningCredit = 0;
+      const txnRows = sorted.map((t, idx) => {
+        runningDebit += t.debitAmount;
+        runningCredit += t.creditAmount;
+        // Saldo = selisih di sisi normal
+        const saldoDebet = debitNormal ? Math.max(0, runningDebit - runningCredit) : 0;
+        const saldoKredit = debitNormal ? 0 : Math.max(0, runningCredit - runningDebit);
+        return {
+          date: t.date,
+          description: t.description,
+          ref: t.id ? t.id.replace('txn_', '').substring(0, 6) : String(idx + 1).padStart(6, '0'),
+          debit: t.debitAmount,
+          credit: t.creditAmount,
+          balanceDebit: saldoDebet,
+          balanceCredit: saldoKredit
+        };
+      });
 
-        ledger.push({
-          accountCode: account.code,
-          accountName: account.name,
-          accountType: account.type,
-          openingBalance: 0,
-          transactions: withBalance.map(t => ({
-            date: t.date,
-            description: t.description,
-            debit: t.debitAmount,
-            credit: t.creditAmount,
-            balance: t.runningBalance
-          })),
-          totalDebits: totalDebits,
-          totalCredits: totalCredits,
-          closingBalance: closingBalance
-        });
-      }
+      const totalDebits = sorted.reduce((sum, t) => sum + t.debitAmount, 0);
+      const totalCredits = sorted.reduce((sum, t) => sum + t.creditAmount, 0);
+      const closingDebit = debitNormal ? Math.max(0, totalDebits - totalCredits) : 0;
+      const closingCredit = debitNormal ? 0 : Math.max(0, totalCredits - totalDebits);
+
+      // Extract period from first transaction date
+      const firstDate = new Date(sorted[0].date);
+
+      ledger.push({
+        accountCode: account.code,
+        accountName: account.name,
+        accountType: account.type,
+        month: firstDate.getMonth() + 1,
+        year: firstDate.getFullYear(),
+        openingBalanceDebit: 0,
+        openingBalanceCredit: 0,
+        transactions: txnRows,
+        totalDebits,
+        totalCredits,
+        closingBalanceDebit: closingDebit,
+        closingBalanceCredit: closingCredit
+      });
     });
 
     const { totalDebits, totalCredits } = accountingCalculator.calculateTotals(transactions);
 
     return {
       type: 'General Ledger',
-      metadata: metadata,
+      metadata,
       accounts: ledger,
       summary: {
         totalAccounts: ledger.length,
-        totalDebits: totalDebits,
-        totalCredits: totalCredits,
+        totalDebits,
+        totalCredits,
         balanced: Math.abs(totalDebits - totalCredits) < 0.01
       }
     };

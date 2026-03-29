@@ -94,7 +94,7 @@ class AIClassifier {
       .map(a => `${a.code}: ${a.name} (${a.type})`)
       .join('\n');
 
-    return `Kamu adalah sistem akuntansi Indonesia yang mengikuti standar PSAK dan double-entry bookkeeping.
+    return `Kamu adalah sistem akuntansi profesional Indonesia yang mengikuti standar PSAK dan prinsip double-entry bookkeeping. Sistem ini mendukung perusahaan jasa maupun perusahaan dagang.
 
 TRANSAKSI:
 - Deskripsi: ${transactionData.description}
@@ -103,38 +103,106 @@ TRANSAKSI:
 - Total: Rp ${transactionData.totalAmount.toLocaleString('id-ID')}
 - Tanggal: ${transactionData.date}
 
-DAFTAR AKUN:
+DAFTAR AKUN TERSEDIA:
 ${accountsList}
 
-ATURAN SALDO NORMAL (WAJIB DIIKUTI):
-- Akun 1xxx (Aset): Bertambah = DEBIT, Berkurang = KREDIT
-- Akun 2xxx (Liabilitas): Bertambah = KREDIT, Berkurang = DEBIT
-- Akun 3xxx (Ekuitas/Modal): Bertambah = KREDIT, Berkurang = DEBIT
-- Akun 4xxx (Pendapatan): Bertambah = KREDIT, Berkurang = DEBIT
-- Akun 5xxx (Beban): Bertambah = DEBIT, Berkurang = KREDIT
+═══════════════════════════════════════════════
+ATURAN SALDO NORMAL (WAJIB DIIKUTI)
+═══════════════════════════════════════════════
+- Akun 1xxx (Aset)      : Bertambah = DEBIT  | Berkurang = KREDIT
+- Akun 2xxx (Liabilitas): Bertambah = KREDIT | Berkurang = DEBIT
+- Akun 3xxx (Ekuitas)   : Bertambah = KREDIT | Berkurang = DEBIT
+- Akun 4xxx (Pendapatan): Bertambah = KREDIT | Berkurang = DEBIT
+- Akun 5xxx (Beban/HPP) : Bertambah = DEBIT  | Berkurang = KREDIT
 
-POLA DOUBLE-ENTRY (setiap transaksi HARUS menghasilkan 2 baris jurnal):
-- modal_awal / investasi / investor → DEBIT Kas (1000) + KREDIT Modal Pemilik (3000)
-  ⚠️ PENTING: "investor" atau "investasi" adalah EKUITAS (3000), BUKAN Beban. Jangan masukkan ke akun 5xxx.
-- beli_peralatan tunai → DEBIT Peralatan (1800) + KREDIT Kas (1000)
-- beli_peralatan_kredit / peralatan_belum_dibayar → DEBIT Peralatan (1800) + KREDIT Utang Usaha (2000)
-- beli_perlengkapan tunai → DEBIT Beban Perlengkapan (5400) + KREDIT Kas (1000)
-- perlengkapan_belum_dibayar / perlengkapan_kredit → DEBIT Beban Perlengkapan (5400) + KREDIT Utang Usaha (2000)
-  ⚠️ PENTING: "belum dibayar" atau "kredit" berarti akun lawan adalah Utang Usaha (2000), BUKAN Kas (1000).
-- pendapatan_jasa tunai → DEBIT Kas (1000) + KREDIT Pendapatan Jasa (4000)
-- bayar_gaji → DEBIT Beban Gaji (5100) + KREDIT Kas (1000)
-- bayar_sewa → DEBIT Beban Sewa (5200) + KREDIT Kas (1000)
-- bayar_listrik → DEBIT Beban Listrik (5300) + KREDIT Kas (1000)
-- piutang_usaha → DEBIT Piutang (1100) + KREDIT Pendapatan (4000)
-- hutang_usaha / belum_dibayar → DEBIT Aset/Beban + KREDIT Utang Usaha (2000)
-- pinjaman_bank → DEBIT Kas (1000) + KREDIT Utang Bank (2100)
+═══════════════════════════════════════════════
+POLA DOUBLE-ENTRY — PERUSAHAAN DAGANG
+═══════════════════════════════════════════════
+PEMBELIAN BARANG DAGANGAN:
+- pembelian_kredit / beli_kredit / syarat_kredit (mis. 2/15,n/30) / kredit_dagang
+  → DEBIT Pembelian (5010) + KREDIT Utang Dagang (2000)
+  ⚠️ Syarat kredit seperti "2/15, n/30" = pembelian kredit, BUKAN tunai
+- pembelian_tunai / beli_tunai / beli_barang_tunai
+  → DEBIT Pembelian (5010) + KREDIT Kas (1000)
+- beban_angkut_pembelian / ongkir_beli / freight_in
+  → DEBIT Beban Angkut Pembelian (5040) + KREDIT Kas (1000)
+- retur_pembelian / retur_beli / kembalikan_barang_beli
+  → DEBIT Utang Dagang (2000) + KREDIT Retur Pembelian (5020)
+- potongan_pembelian / diskon_beli
+  → DEBIT Utang Dagang (2000) + KREDIT Potongan Pembelian (5030)
 
-ATURAN KRITIS:
-1. Kata "investor", "investasi", "modal", "setoran" → selalu ke Modal Pemilik (3000), BUKAN ke Beban (5xxx)
-2. Kata "belum dibayar", "kredit", "hutang" → akun lawan selalu Utang Usaha (2000), BUKAN Kas (1000)
-3. Kata "tunai", "cash", "bayar" tanpa "belum" → akun lawan adalah Kas (1000)
+PENJUALAN BARANG DAGANGAN:
+- penjualan_kredit / jual_kredit / jual_piutang
+  → DEBIT Piutang Dagang (1100) + KREDIT Penjualan (4000)
+- penjualan_tunai / jual_tunai / jual_kas
+  → DEBIT Kas (1000) + KREDIT Penjualan (4000)
+- retur_penjualan / retur_jual / barang_dikembalikan_pembeli
+  → DEBIT Retur Penjualan (4100) + KREDIT Piutang Dagang (1100)
+- potongan_penjualan / diskon_jual / sales_discount
+  → DEBIT Potongan Penjualan (4200) + KREDIT Piutang Dagang (1100)
+- beban_angkut_penjualan / ongkir_jual / freight_out / kirim_barang
+  → DEBIT Beban Angkut Penjualan (5750) + KREDIT Kas (1000)
+- penerimaan_piutang / terima_pelunasan / bayar_piutang
+  → DEBIT Kas (1000) + KREDIT Piutang Dagang (1100)
+- bayar_utang_dagang / lunasi_utang / pelunasan_utang
+  → DEBIT Utang Dagang (2000) + KREDIT Kas (1000)
 
-Jawab HANYA dalam format JSON valid (tanpa markdown):
+═══════════════════════════════════════════════
+POLA DOUBLE-ENTRY — PERUSAHAAN JASA & UMUM
+═══════════════════════════════════════════════
+MODAL & EKUITAS:
+- modal_awal / investasi / investor / setoran_pemilik / capital
+  → DEBIT Kas (1000) + KREDIT Modal Pemilik (3000)
+  ⚠️ KRITIS: "investor" atau "investasi" = EKUITAS (3000), BUKAN Beban (5xxx)
+- prive / penarikan / ambil_uang / drawing
+  → DEBIT Prive (3100) + KREDIT Kas (1000)
+
+PENDAPATAN JASA:
+- pendapatan_jasa_tunai / terima_jasa / jasa_tunai
+  → DEBIT Kas (1000) + KREDIT Penjualan (4000)
+- piutang_jasa / jasa_kredit / jasa_belum_dibayar
+  → DEBIT Piutang Dagang (1100) + KREDIT Penjualan (4000)
+
+BEBAN OPERASIONAL:
+- bayar_gaji / beban_gaji / upah / honor / salary
+  → DEBIT Beban Gaji (5100) + KREDIT Kas (1000)
+- bayar_sewa / beban_sewa / rent
+  → DEBIT Beban Sewa (5200) + KREDIT Kas (1000)
+- bayar_listrik / beban_listrik / pln / token / air / pam / internet / wifi
+  → DEBIT Beban Listrik dan Air (5300) + KREDIT Kas (1000)
+- perlengkapan_tunai / beli_perlengkapan / atk / alat_tulis / supplies
+  → DEBIT Beban Perlengkapan (5400) + KREDIT Kas (1000)
+- perlengkapan_belum_dibayar / perlengkapan_kredit / atk_kredit / atk_belum_dibayar
+  → DEBIT Beban Perlengkapan (5400) + KREDIT Utang Dagang (2000)
+  ⚠️ "belum dibayar" = Utang Dagang (2000), BUKAN Kas
+- beban_iklan / iklan / promosi / advertise / ads / marketing
+  → DEBIT Beban Iklan (5710) + KREDIT Kas (1000)
+- beban_asuransi / asuransi / premi / insurance
+  → DEBIT Beban Asuransi (5600) + KREDIT Kas (1000)
+- beban_bunga / bunga / interest
+  → DEBIT Beban Bunga (5800) + KREDIT Kas (1000)
+
+ASET TETAP:
+- beli_peralatan_tunai / peralatan_tunai / equipment_tunai
+  → DEBIT Peralatan (1800) + KREDIT Kas (1000)
+- beli_peralatan_kredit / peralatan_belum_dibayar / peralatan_kredit
+  → DEBIT Peralatan (1800) + KREDIT Utang Dagang (2000)
+
+UTANG & PINJAMAN:
+- pinjaman_bank / kredit_bank / loan
+  → DEBIT Kas (1000) + KREDIT Utang Bank (2100)
+
+═══════════════════════════════════════════════
+ATURAN KRITIS — WAJIB DIPATUHI
+═══════════════════════════════════════════════
+1. "investor", "investasi", "modal", "setoran" → Modal Pemilik (3000), BUKAN Beban (5xxx)
+2. "belum dibayar", "kredit", "hutang" → akun lawan = Utang Dagang (2000), BUKAN Kas
+3. "tunai", "cash", "bayar" (tanpa "belum") → akun lawan = Kas (1000)
+4. Syarat kredit seperti "2/15, n/30" atau "n/30" → pembelian/penjualan KREDIT
+5. Gunakan HANYA kode akun yang ada di DAFTAR AKUN TERSEDIA di atas
+6. Setiap transaksi menghasilkan TEPAT 1 debit dan 1 kredit (double-entry)
+
+Jawab HANYA dalam format JSON valid (tanpa markdown, tanpa komentar):
 {
   "debitAccount": {
     "accountCode": "kode akun debit",
@@ -147,7 +215,7 @@ Jawab HANYA dalam format JSON valid (tanpa markdown):
     "accountType": "Asset/Liability/Equity/Revenue/Expense"
   },
   "confidence": 0.95,
-  "reasoning": "Penjelasan singkat dalam Bahasa Indonesia mengapa jurnal ini benar"
+  "reasoning": "Penjelasan singkat dalam Bahasa Indonesia mengapa jurnal ini benar sesuai PSAK"
 }`;
   }
 

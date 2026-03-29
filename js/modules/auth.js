@@ -212,14 +212,14 @@ class AuthManager {
       // ASET (1000-1999)
       { code: '1000', name: 'Kas', type: 'Asset', category: 'Aset Lancar', balance: 0 },
       { code: '1010', name: 'Bank', type: 'Asset', category: 'Aset Lancar', balance: 0 },
-      { code: '1100', name: 'Piutang Usaha', type: 'Asset', category: 'Aset Lancar', balance: 0 },
-      { code: '1200', name: 'Persediaan', type: 'Asset', category: 'Aset Lancar', balance: 0 },
+      { code: '1100', name: 'Piutang Dagang', type: 'Asset', category: 'Aset Lancar', balance: 0 },
+      { code: '1200', name: 'Persediaan Barang Dagangan', type: 'Asset', category: 'Aset Lancar', balance: 0 },
       { code: '1500', name: 'Perlengkapan', type: 'Asset', category: 'Aset Lancar', balance: 0 },
       { code: '1600', name: 'Beban Dibayar Dimuka', type: 'Asset', category: 'Aset Lancar', balance: 0 },
       { code: '1800', name: 'Peralatan', type: 'Asset', category: 'Aset Tetap', balance: 0 },
       { code: '1810', name: 'Akumulasi Penyusutan Peralatan', type: 'Asset', category: 'Aset Tetap', balance: 0 },
       // LIABILITAS (2000-2999)
-      { code: '2000', name: 'Utang Usaha', type: 'Liability', category: 'Liabilitas Lancar', balance: 0 },
+      { code: '2000', name: 'Utang Dagang', type: 'Liability', category: 'Liabilitas Lancar', balance: 0 },
       { code: '2100', name: 'Utang Bank', type: 'Liability', category: 'Liabilitas Lancar', balance: 0 },
       { code: '2200', name: 'Beban Yang Masih Harus Dibayar', type: 'Liability', category: 'Liabilitas Lancar', balance: 0 },
       { code: '2300', name: 'Pendapatan Diterima Dimuka', type: 'Liability', category: 'Liabilitas Lancar', balance: 0 },
@@ -227,9 +227,15 @@ class AuthManager {
       { code: '3000', name: 'Modal Pemilik', type: 'Equity', category: 'Ekuitas', balance: 0 },
       { code: '3100', name: 'Prive', type: 'Equity', category: 'Ekuitas', balance: 0 },
       // PENDAPATAN (4000-4999)
-      { code: '4000', name: 'Pendapatan Jasa', type: 'Revenue', category: 'Pendapatan Usaha', balance: 0 },
-      { code: '4100', name: 'Pendapatan Lain-lain', type: 'Revenue', category: 'Pendapatan Lain', balance: 0 },
+      { code: '4000', name: 'Penjualan', type: 'Revenue', category: 'Pendapatan Usaha', balance: 0 },
+      { code: '4100', name: 'Retur Penjualan dan Potongan Harga', type: 'Revenue', category: 'Pendapatan Usaha', balance: 0 },
+      { code: '4200', name: 'Potongan Penjualan', type: 'Revenue', category: 'Pendapatan Usaha', balance: 0 },
+      { code: '4900', name: 'Pendapatan Lain-lain', type: 'Revenue', category: 'Pendapatan Lain', balance: 0 },
       // BEBAN (5000-5999)
+      { code: '5010', name: 'Pembelian', type: 'Expense', category: 'Harga Pokok', balance: 0 },
+      { code: '5020', name: 'Retur Pembelian dan Potongan Harga', type: 'Expense', category: 'Harga Pokok', balance: 0 },
+      { code: '5030', name: 'Potongan Pembelian', type: 'Expense', category: 'Harga Pokok', balance: 0 },
+      { code: '5040', name: 'Beban Angkut Pembelian', type: 'Expense', category: 'Harga Pokok', balance: 0 },
       { code: '5100', name: 'Beban Gaji', type: 'Expense', category: 'Beban Usaha', balance: 0 },
       { code: '5200', name: 'Beban Sewa', type: 'Expense', category: 'Beban Usaha', balance: 0 },
       { code: '5300', name: 'Beban Listrik dan Air', type: 'Expense', category: 'Beban Usaha', balance: 0 },
@@ -237,6 +243,8 @@ class AuthManager {
       { code: '5500', name: 'Beban Penyusutan', type: 'Expense', category: 'Beban Usaha', balance: 0 },
       { code: '5600', name: 'Beban Asuransi', type: 'Expense', category: 'Beban Usaha', balance: 0 },
       { code: '5700', name: 'Beban Pemasaran', type: 'Expense', category: 'Beban Usaha', balance: 0 },
+      { code: '5710', name: 'Beban Iklan', type: 'Expense', category: 'Beban Usaha', balance: 0 },
+      { code: '5750', name: 'Beban Angkut Penjualan', type: 'Expense', category: 'Beban Usaha', balance: 0 },
       { code: '5800', name: 'Beban Bunga', type: 'Expense', category: 'Beban Lain', balance: 0 },
       { code: '5900', name: 'Beban Lain-lain', type: 'Expense', category: 'Beban Lain', balance: 0 }
     ];

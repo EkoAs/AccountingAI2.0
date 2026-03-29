@@ -41,9 +41,31 @@ Dokumentasi ini menjelaskan step-by-step bagaimana sistem bekerja dari input hin
 
 ## 🔢 Step-by-Step Workflow
 
-### STEP 1: User Input Transaksi
+### STEP 1: Welcome Screen
+```
+User mengisi:
+- Nama Perusahaan (wajib)
+- Judul Laporan
+- Nama Penyusun
+Klik "Mulai Sekarang"
+```
+
+**Apa yang terjadi:**
+- Data profil disimpan ke localStorage
+- Chart of accounts default dimuat
+- Tampilan beralih ke app interface
+
+---
+
+### STEP 2: User Input Transaksi
 ```
 User mengetik: "pulpen 3000 45 2025-01-02"
+Tekan Enter atau klik Submit
+```
+
+### STEP 2: User Input Transaksi
+```
+User mengetik: "pembelian_kredit 10000000 1 2025-01-05"
 Tekan Enter atau klik Submit
 ```
 
@@ -55,16 +77,16 @@ Tekan Enter atau klik Submit
 
 ---
 
-### STEP 2: Parse Input
+### STEP 3: Parse Input
 ```
-Input: "pulpen 3000 45 2025-01-02"
+Input: "pembelian_kredit 10000000 1 2025-01-05"
 ↓
 Parse:
-- description: "pulpen"
-- amount: 3000
-- quantity: 45
-- date: "2025-01-02"
-- totalAmount: 135000
+- description: "pembelian_kredit"
+- amount: 10000000
+- quantity: 1
+- date: "2025-01-05"
+- totalAmount: 10000000
 ```
 
 **Apa yang terjadi:**
