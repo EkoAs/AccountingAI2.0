@@ -5,18 +5,25 @@
 
 :root {
     /* Primary Colors - Gray Space Metallic */
-    --color-deep-space: #1c1c1c;
-    --color-metallic-silver: #c0c0c0;
-    --color-light-gray: #e8e8e8;
-    --color-charcoal: #2e2e2e;
-    
+    --color-deep-space: #1c1c1c;        /* bg utama — sangat gelap */
+    --color-charcoal: #2e2e2e;          /* bg panel — gelap */
+    --color-surface: #3a3a3a;           /* bg sub-panel — sedikit lebih terang */
+    --color-surface-alt: #424242;       /* bg hover/alt — selaras */
+    --color-metallic-silver: #c0c0c0;   /* teks utama di atas bg gelap */
+    --color-light-gray: #e8e8e8;        /* teks terang di atas bg gelap */
+
     /* Accent Colors */
     --color-success: #4ade80;
     --color-warning: #fb923c;
     --color-error: #ef4444;
     --color-info: #3b82f6;
-    
-    /* Neutral Colors */
+
+    /* Teks khusus laporan */
+    --color-debit: #f87171;             /* merah terang — terbaca di bg gelap */
+    --color-credit: #86efac;            /* hijau terang — terbaca di bg gelap */
+    --color-balance: #fbbf24;           /* kuning/amber — saldo akhir */
+
+    /* Neutral Colors (dipakai di area terang: modal, welcome, form) */
     --color-white: #ffffff;
     --color-black: #000000;
     --color-gray-50: #f9fafb;
@@ -29,11 +36,11 @@
     --color-gray-700: #374151;
     --color-gray-800: #1f2937;
     --color-gray-900: #111827;
-    
+
     /* Typography */
     --font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
     --font-mono: 'Courier New', monospace;
-    
+
     --font-size-xs: 0.75rem;
     --font-size-sm: 0.875rem;
     --font-size-base: 1rem;
@@ -42,12 +49,12 @@
     --font-size-2xl: 1.5rem;
     --font-size-3xl: 1.875rem;
     --font-size-4xl: 2.25rem;
-    
+
     --font-weight-normal: 400;
     --font-weight-medium: 500;
     --font-weight-semibold: 600;
     --font-weight-bold: 700;
-    
+
     /* Spacing */
     --spacing-xs: 0.25rem;
     --spacing-sm: 0.5rem;
@@ -56,25 +63,25 @@
     --spacing-xl: 2rem;
     --spacing-2xl: 3rem;
     --spacing-3xl: 4rem;
-    
+
     /* Border Radius */
     --radius-sm: 0.25rem;
     --radius-md: 0.375rem;
     --radius-lg: 0.5rem;
     --radius-xl: 0.75rem;
     --radius-2xl: 1rem;
-    
+
     /* Shadows */
-    --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
-    --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
-    --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
-    --shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
-    
+    --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.3);
+    --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.4);
+    --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.4);
+    --shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.5);
+
     /* Transitions */
     --transition-fast: 150ms ease-in-out;
     --transition-base: 200ms ease-in-out;
     --transition-slow: 300ms ease-in-out;
-    
+
     /* Z-index */
     --z-dropdown: 1000;
     --z-modal: 1050;
@@ -98,7 +105,7 @@ body {
     font-size: var(--font-size-base);
     font-weight: var(--font-weight-normal);
     line-height: 1.6;
-    color: var(--color-gray-900);
+    color: var(--color-light-gray);
     background-color: var(--color-deep-space);
     background: linear-gradient(135deg, var(--color-deep-space) 0%, var(--color-charcoal) 100%);
     min-height: 100vh;
@@ -109,6 +116,7 @@ h1, h2, h3, h4, h5, h6 {
     font-weight: var(--font-weight-bold);
     line-height: 1.2;
     margin-bottom: var(--spacing-md);
+    color: var(--color-light-gray);
 }
 
 h1 { font-size: var(--font-size-4xl); }
@@ -129,30 +137,30 @@ a {
 }
 
 a:hover {
-    color: var(--color-info);
+    color: #60a5fa;
     text-decoration: underline;
 }
 
-/* Form Elements */
+/* Form Elements — area terang (modal/welcome) */
 input, textarea, select {
     font-family: var(--font-family);
     font-size: var(--font-size-base);
     padding: var(--spacing-md);
-    border: 1px solid var(--color-gray-300);
+    border: 1px solid var(--color-gray-600);
     border-radius: var(--radius-md);
-    background-color: var(--color-white);
-    color: var(--color-gray-900);
+    background-color: var(--color-surface);
+    color: var(--color-light-gray);
     transition: all var(--transition-base);
 }
 
 input:focus, textarea:focus, select:focus {
     outline: none;
     border-color: var(--color-info);
-    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.2);
 }
 
 input::placeholder {
-    color: var(--color-gray-400);
+    color: var(--color-gray-500);
 }
 
 /* Buttons */
@@ -172,77 +180,76 @@ button {
 }
 
 button:disabled {
-    opacity: 0.5;
+    opacity: 0.4;
     cursor: not-allowed;
 }
 
-/* Button Variants */
 .btn-primary {
     background-color: var(--color-info);
-    color: var(--color-white);
+    color: var(--color-light-gray);
     box-shadow: var(--shadow-md);
 }
 
 .btn-primary:hover:not(:disabled) {
     background-color: #2563eb;
     box-shadow: var(--shadow-lg);
-    transform: translateY(-2px);
+    transform: translateY(-1px);
 }
 
 .btn-secondary {
-    background-color: var(--color-metallic-silver);
-    color: var(--color-deep-space);
+    background-color: var(--color-surface-alt);
+    color: var(--color-metallic-silver);
+    border: 1px solid var(--color-metallic-silver);
     box-shadow: var(--shadow-sm);
 }
 
 .btn-secondary:hover:not(:disabled) {
-    background-color: #d4d4d4;
-    box-shadow: var(--shadow-md);
+    background-color: var(--color-surface);
+    color: var(--color-light-gray);
 }
 
 .btn-danger {
     background-color: var(--color-error);
-    color: var(--color-white);
+    color: var(--color-light-gray);
     box-shadow: var(--shadow-md);
 }
 
 .btn-danger:hover:not(:disabled) {
     background-color: #dc2626;
     box-shadow: var(--shadow-lg);
-    transform: translateY(-2px);
 }
 
 .btn-success {
-    background-color: var(--color-success);
-    color: var(--color-white);
+    background-color: #16a34a;
+    color: var(--color-light-gray);
 }
 
 .btn-success:hover:not(:disabled) {
-    background-color: #22c55e;
+    background-color: #15803d;
 }
 
 .btn-error {
     background-color: var(--color-error);
-    color: var(--color-white);
+    color: var(--color-light-gray);
 }
 
 .btn-error:hover:not(:disabled) {
     background-color: #dc2626;
 }
 
-/* Tables */
+/* Tables — dark theme */
 table {
     width: 100%;
     border-collapse: collapse;
-    background-color: var(--color-white);
+    background-color: var(--color-charcoal);
     box-shadow: var(--shadow-md);
     border-radius: var(--radius-lg);
     overflow: hidden;
 }
 
 thead {
-    background-color: var(--color-charcoal);
-    color: var(--color-white);
+    background-color: var(--color-deep-space);
+    color: var(--color-metallic-silver);
 }
 
 th {
@@ -250,27 +257,30 @@ th {
     text-align: left;
     font-weight: var(--font-weight-semibold);
     border-bottom: 2px solid var(--color-metallic-silver);
+    color: var(--color-metallic-silver);
 }
 
 td {
     padding: var(--spacing-md);
-    border-bottom: 1px solid var(--color-gray-200);
+    border-bottom: 1px solid rgba(192,192,192,0.15);
+    color: var(--color-light-gray);
 }
 
 tbody tr:hover {
-    background-color: var(--color-gray-50);
+    background-color: var(--color-surface);
 }
 
 tbody tr:last-child td {
     border-bottom: none;
 }
 
-/* Cards and Containers */
+/* Cards */
 .card {
-    background-color: var(--color-white);
+    background-color: var(--color-charcoal);
     border-radius: var(--radius-lg);
     padding: var(--spacing-lg);
     box-shadow: var(--shadow-md);
+    border: 1px solid rgba(192,192,192,0.15);
     transition: all var(--transition-base);
 }
 
@@ -288,23 +298,23 @@ tbody tr:last-child td {
 }
 
 .badge-success {
-    background-color: rgba(74, 222, 128, 0.1);
-    color: #16a34a;
+    background-color: rgba(74, 222, 128, 0.15);
+    color: var(--color-success);
 }
 
 .badge-warning {
-    background-color: rgba(251, 146, 60, 0.1);
-    color: #ea580c;
+    background-color: rgba(251, 146, 60, 0.15);
+    color: var(--color-warning);
 }
 
 .badge-error {
-    background-color: rgba(239, 68, 68, 0.1);
-    color: #dc2626;
+    background-color: rgba(239, 68, 68, 0.15);
+    color: var(--color-error);
 }
 
 .badge-info {
-    background-color: rgba(59, 130, 246, 0.1);
-    color: #2563eb;
+    background-color: rgba(59, 130, 246, 0.15);
+    color: var(--color-info);
 }
 
 /* Alerts */
@@ -320,32 +330,32 @@ tbody tr:last-child td {
 .alert-success {
     background-color: rgba(74, 222, 128, 0.1);
     border-left: 4px solid var(--color-success);
-    color: #16a34a;
+    color: var(--color-success);
 }
 
 .alert-error {
     background-color: rgba(239, 68, 68, 0.1);
     border-left: 4px solid var(--color-error);
-    color: #dc2626;
+    color: var(--color-error);
 }
 
 .alert-warning {
     background-color: rgba(251, 146, 60, 0.1);
     border-left: 4px solid var(--color-warning);
-    color: #ea580c;
+    color: var(--color-warning);
 }
 
 .alert-info {
     background-color: rgba(59, 130, 246, 0.1);
     border-left: 4px solid var(--color-info);
-    color: #2563eb;
+    color: var(--color-info);
 }
 
 /* Loading Spinner */
 .spinner {
     width: 40px;
     height: 40px;
-    border: 4px solid var(--color-gray-200);
+    border: 4px solid rgba(192,192,192,0.2);
     border-top-color: var(--color-info);
     border-radius: 50%;
     animation: spin 1s linear infinite;

@@ -341,9 +341,7 @@
         display: none !important;
     }
 
-    .main-container {
-        padding: 0;
-    }
+    .main-container { padding: 0; }
 
     .app-layout {
         grid-template-columns: 1fr;
@@ -361,13 +359,21 @@
         min-width: unset;
     }
 
+    /* Print: gunakan bg terang agar tinta hemat, teks gelap */
     .report-table thead {
-        background-color: var(--color-gray-200);
-        color: var(--color-black);
+        background-color: #e0e0e0 !important;
+        color: #111 !important;
+    }
+
+    .report-table td,
+    .report-table th {
+        color: #111 !important;
+        border-color: #999 !important;
     }
 
     body {
-        background: var(--color-white);
+        background: #f5f5f5 !important;
+        color: #111 !important;
     }
 }
 
@@ -378,39 +384,5 @@
         transition-duration: 0.01ms !important;
     }
 
-    .spinner {
-        animation: none;
-    }
-}
-
-/* ── DARK MODE ───────────────────────────────────────────────────────────── */
-@media (prefers-color-scheme: dark) {
-    .input-panel,
-    .display-panel,
-    .welcome-card {
-        background: var(--color-charcoal);
-        color: var(--color-light-gray);
-    }
-
-    .form-group input,
-    .transaction-input,
-    .report-select {
-        background-color: var(--color-deep-space);
-        color: var(--color-light-gray);
-        border-color: var(--color-gray-600);
-    }
-
-    .report-table {
-        background-color: var(--color-charcoal);
-        color: var(--color-light-gray);
-    }
-
-    .report-table tbody tr:hover {
-        background-color: var(--color-deep-space);
-    }
-
-    .modal-content {
-        background-color: var(--color-charcoal);
-        color: var(--color-light-gray);
-    }
+    .spinner { animation: none; }
 }
