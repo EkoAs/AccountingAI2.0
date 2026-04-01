@@ -10,7 +10,7 @@ Mendukung **perusahaan jasa** maupun **perusahaan dagang**.
 - AI Double-Entry — Setiap transaksi otomatis menghasilkan 2 baris jurnal (Debit + Kredit)
 - 4 Jenis Laporan — General Journal, General Ledger, Trial Balance, Reversing Journal
 - Standar PSAK — Saldo normal per kelompok akun, persamaan akuntansi A = L + E
-- PDF Export — Download laporan profesional
+- PDF Export — Download laporan A4, font Times New Roman, siap cetak
 - Undo/Redo — Batalkan atau ulangi transaksi
 - Responsive — Optimal di HP, tablet, dan laptop
 
@@ -148,7 +148,7 @@ investor 10000000 1 2025-01-20
 | Tombol Mulai tidak bisa diklik | Pastikan nama perusahaan diisi |
 | Transaksi tidak balance | Setiap input menghasilkan 2 baris otomatis — cek apakah ada transaksi lama dari sesi sebelumnya |
 | AI salah klasifikasi | Gunakan keyword spesifik seperti `pembelian_kredit`, `penjualan_tunai`, `perlengkapan_belum_dibayar` |
-| PDF tidak generate | Pastikan status "✓ Balanced" sebelum generate PDF |
+| PDF tidak generate | Pastikan status "✓ Balanced" sebelum generate PDF. Buka browser console jika masih gagal |
 | Data hilang setelah update | Chart of accounts diperbarui — klik Reset All Data lalu input ulang transaksi |
 | Data hilang | Data tersimpan di localStorage browser — jangan clear browser data |
 

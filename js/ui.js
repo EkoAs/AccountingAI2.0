@@ -179,6 +179,15 @@ class UIManager {
   }
 
   _renderGeneralJournal(report) {
+    // Reset table layout dari buku besar jika sebelumnya aktif
+    const table = this.elements.tableBody.closest('table');
+    if (table) {
+      const oldCg = table.querySelector('colgroup');
+      if (oldCg) oldCg.remove();
+      table.style.tableLayout = '';
+      table.style.width = '';
+    }
+
     this.elements.tableHeader.innerHTML =
       '<th>Tanggal</th><th>Kode Akun</th><th>Nama Akun</th><th>Keterangan</th><th>Debet</th><th>Kredit</th>';
     const rows = report.entries.map(e =>
@@ -196,7 +205,6 @@ class UIManager {
   }
 
   _renderGeneralLedger(report) {
-    // General Ledger uses a special per-account card layout — hide the shared table header
     this.elements.tableHeader.innerHTML = '';
     this.elements.tableBody.innerHTML = '';
 
@@ -205,17 +213,39 @@ class UIManager {
       return;
     }
 
+    // Inject colgroup untuk lebar kolom proporsional — paksa fit dalam container
+    // 7 kolom: Tanggal | Keterangan | No Ref | Debet | Kredit | Saldo D | Saldo K
+    const colgroup = '<colgroup>' +
+      '<col style="width:11%">' +   // Tanggal
+      '<col style="width:29%">' +   // Keterangan
+      '<col style="width:8%">' +    // No Ref
+      '<col style="width:13%">' +   // Debet
+      '<col style="width:13%">' +   // Kredit
+      '<col style="width:13%">' +   // Saldo D
+      '<col style="width:13%">' +   // Saldo K
+      '</colgroup>';
+
+    // Inject colgroup ke tabel (sebelum thead)
+    const table = this.elements.tableBody.closest('table');
+    if (table) {
+      // Hapus colgroup lama jika ada
+      const oldCg = table.querySelector('colgroup');
+      if (oldCg) oldCg.remove();
+      table.insertAdjacentHTML('afterbegin', colgroup);
+      table.style.tableLayout = 'fixed';
+      table.style.width = '100%';
+    }
+
     const html = report.accounts.map(account => {
       const monthNames = ['Januari','Februari','Maret','April','Mei','Juni',
                           'Juli','Agustus','September','Oktober','November','Desember'];
       const bulan = monthNames[(account.month || 1) - 1] || account.month;
       const tahun = account.year || '-';
 
-      // Transaction rows
       const txnRows = account.transactions.map(t =>
         '<tr>' +
-        '<td>' + t.date + '</td>' +
-        '<td>' + t.description + '</td>' +
+        '<td style="word-break:keep-all">' + t.date + '</td>' +
+        '<td style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap">' + t.description + '</td>' +
         '<td class="ref-col">' + t.ref + '</td>' +
         '<td class="amount-debit">' + (t.debit > 0 ? this.formatCurrency(t.debit) : '-') + '</td>' +
         '<td class="amount-credit">' + (t.credit > 0 ? this.formatCurrency(t.credit) : '-') + '</td>' +
@@ -294,6 +324,15 @@ class UIManager {
   _renderReversingJournal(report) {
     this.elements.tableHeader.innerHTML =
       '<th>Tanggal</th><th>Kode Akun</th><th>Nama Akun</th><th>Keterangan</th><th>Debet</th><th>Kredit</th>';
+
+    if (!report.entries || report.entries.length === 0) {
+      this.elements.tableBody.innerHTML =
+        '<tr><td colspan="6" style="text-align:center;padding:20px;color:var(--color-gray-400);">' +
+        (report.emptyReason || 'Tidak ada entri jurnal pembalik.') +
+        '</td></tr>';
+      return;
+    }
+
     const rows = report.entries.map(e =>
       '<tr><td>' + e.date + '</td><td>' + e.accountCode + '</td><td>' + (e.account || '-') + '</td><td>' + e.description + '</td>' +
       '<td class="amount-debit">' + (e.debit > 0 ? this.formatCurrency(e.debit) : '-') + '</td>' +

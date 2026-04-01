@@ -100,20 +100,32 @@ class AccountingApp {
     this.transactions = transactionManager.getTransactions(this.currentUser) || [];
     this.chartOfAccounts = storageManager.loadData(this.currentUser, 'chartOfAccounts') || [];
 
-    // If chartOfAccounts is empty, initialize with defaults
-    if (!this.chartOfAccounts || this.chartOfAccounts.length === 0) {
-      this.chartOfAccounts = authManager.getDefaultChartOfAccounts();
+    // If chartOfAccounts is empty OR outdated (< 34 accounts = pre-trading-company update), refresh
+    const defaultCoa = authManager.getDefaultChartOfAccounts();
+    if (!this.chartOfAccounts || this.chartOfAccounts.length < defaultCoa.length) {
+      this.chartOfAccounts = defaultCoa;
       storageManager.saveData(this.currentUser, 'chartOfAccounts', this.chartOfAccounts);
     }
 
-    const profile = authManager.getUserProfile(this.currentUser);
-    if (profile) {
+    // Load metadata — try dedicated 'metadata' key first, fallback to profile
+    const savedMeta = storageManager.loadData(this.currentUser, 'metadata');
+    if (savedMeta && savedMeta.organizationName) {
       this.metadata = {
-        organizationName: profile.organizationName || '',
-        reportTitle: profile.reportTitle || 'Accounting Report',
-        preparer: profile.preparer || '',
+        organizationName: savedMeta.organizationName || '',
+        reportTitle: savedMeta.reportTitle || 'Laporan Keuangan',
+        preparer: savedMeta.preparer || '',
         dateRange: ''
       };
+    } else {
+      const profile = authManager.getUserProfile(this.currentUser);
+      if (profile) {
+        this.metadata = {
+          organizationName: profile.organizationName || '',
+          reportTitle: profile.reportTitle || 'Laporan Keuangan',
+          preparer: profile.preparer || '',
+          dateRange: ''
+        };
+      }
     }
   }
 
@@ -489,7 +501,9 @@ class AccountingApp {
   resetAllData() {
     try {
       this.transactions = [];
+      this.chartOfAccounts = authManager.getDefaultChartOfAccounts();
       storageManager.saveData(this.currentUser, 'transactions', []);
+      storageManager.saveData(this.currentUser, 'chartOfAccounts', this.chartOfAccounts);
       this.undoStack = [];
       this.redoStack = [];
       this.isFinalized = false;

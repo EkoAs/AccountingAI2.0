@@ -107,9 +107,11 @@
 /* ── Main Container ───────────────────────────────────────────────────── */
 .main-container {
     max-width: 1400px;
+    width: 100%;
     margin: 0 auto;
     padding: var(--spacing-lg);
     min-height: calc(100vh - 80px);
+    box-sizing: border-box;
 }
 
 /* ── Welcome Section ──────────────────────────────────────────────────── */
@@ -249,27 +251,41 @@
 /* ── App Section ──────────────────────────────────────────────────────── */
 .app-section { background-color: transparent; }
 
+/* Layout 1 kolom vertikal — input bar atas, report full width bawah */
 .app-layout {
-    display: grid;
-    grid-template-columns: 340px 1fr;
-    gap: var(--spacing-lg);
-    align-items: start;
-    min-height: calc(100vh - 120px);
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-md);
+    width: 100%;
+    min-width: 0;
 }
 
-/* ── Input Panel ──────────────────────────────────────────────────────── */
+/* ── Input Panel — horizontal bar ────────────────────────────────────── */
 .input-panel {
     background: linear-gradient(135deg, var(--color-charcoal) 0%, var(--color-surface) 100%);
     border-radius: var(--radius-lg);
-    padding: var(--spacing-lg);
+    padding: var(--spacing-md) var(--spacing-lg);
     box-shadow: var(--shadow-lg);
     border: 1px solid rgba(192,192,192,0.15);
     display: flex;
     flex-direction: column;
-    gap: var(--spacing-lg);
-    height: fit-content;
-    position: sticky;
-    top: 100px;
+    gap: var(--spacing-md);
+    width: 100%;
+    min-width: 0;
+    box-sizing: border-box;
+}
+
+/* Baris input + tombol dalam satu baris horizontal */
+.input-panel-row {
+    display: flex;
+    align-items: flex-end;
+    gap: var(--spacing-md);
+    flex-wrap: wrap;
+}
+
+.input-group-main {
+    flex: 1;
+    min-width: 200px;
 }
 
 .panel-header {
@@ -460,6 +476,8 @@
     display: flex;
     flex-direction: column;
     gap: var(--spacing-lg);
+    min-width: 0;
+    overflow: hidden;
 }
 
 .report-selector { display: flex; gap: var(--spacing-md); }

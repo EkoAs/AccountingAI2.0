@@ -3,34 +3,34 @@
  * Desktop ≥1024px | Tablet 768–1023px | Mobile <768px
  */
 
+/* ── GLOBAL — cegah horizontal scroll di semua ukuran ───────────────────── */
+html, body {
+    overflow-x: hidden;
+    width: 100%;
+}
+
 /* ── DESKTOP (default, ≥1024px) ─────────────────────────────────────────── */
 .app-layout {
-    display: grid;
-    grid-template-columns: 340px 1fr;
-    gap: var(--spacing-lg);
-    align-items: start;
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-md);
+    width: 100%;
+    min-width: 0;
 }
 
 .input-panel {
-    position: sticky;
-    top: 80px;
-    max-height: calc(100vh - 100px);
-    overflow-y: auto;
+    position: static;
+    width: 100%;
+}
+
+/* Tabel hanya scroll horizontal di dalam container-nya, bukan halaman */
+.report-container {
+    overflow-x: auto;
+    max-width: 100%;
 }
 
 /* ── TABLET (768px – 1023px) ─────────────────────────────────────────────── */
 @media (max-width: 1023px) {
-    .app-layout {
-        grid-template-columns: 1fr;
-        gap: var(--spacing-md);
-    }
-
-    .input-panel {
-        position: static;
-        max-height: none;
-        overflow-y: visible;
-    }
-
     .report-summary {
         grid-template-columns: repeat(3, 1fr);
     }

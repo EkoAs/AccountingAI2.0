@@ -183,8 +183,8 @@ class PDFGenerator {
         widths, y
       );
 
-      // Spacer antar akun — 8mm jarak jelas
-      y += 8;
+      // Spacer antar akun
+      y += 14;
     });
 
     return y;
@@ -195,10 +195,10 @@ class PDFGenerator {
                         'Juli','Agustus','September','Oktober','November','Desember'];
     const bulan = monthNames[(acc.month || 1) - 1] || String(acc.month);
 
-    const lineH = 5;
+    const lineH = 6;
     const padTop = 5;   // jarak teks baris pertama dari atas box
-    const padBot = 4;   // padding bawah
-    const boxH = padTop + lineH * 4 + padBot; // = 5 + 28 + 4 = 37mm
+    const padBot = 5;   // padding bawah
+    const boxH = padTop + lineH * 4 + padBot; // = 5 + 24 + 5 = 34mm
 
     doc.setFillColor(235, 235, 235);
     doc.setDrawColor(150, 150, 150);
@@ -307,7 +307,7 @@ class PDFGenerator {
 
     // Rect dari y ke bawah (konsisten dengan _accountInfoBlock)
     let x = this.ml;
-    cols.forEach((col, i) => {
+    cols.forEach((_col, i) => {
       doc.rect(x, y, widths[i], rowH, 'FD');
       x += widths[i];
     });

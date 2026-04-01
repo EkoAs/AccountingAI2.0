@@ -54,10 +54,10 @@
                             <h3>📋 Panduan Singkat</h3>
                             <ul class="guide-list">
                                 <li><strong>Input Transaksi:</strong> Masukkan transaksi dalam format: nama_barang jumlah kuantitas tanggal</li>
-                                <li><strong>AI Classification:</strong> Sistem otomatis mengklasifikasi akun dan debit/kredit</li>
+                                <li><strong>AI Classification:</strong> Sistem otomatis mengklasifikasi akun dan debit/kredit serta tabel</li>
                                 <li><strong>Laporan:</strong> Lihat General Journal, General Ledger, Trial Balance, dan Reversing Journal</li>
-                                <li><strong>Export:</strong> Unduh laporan dalam format PDF atau JSON</li>
-                                <li><strong>Undo/Redo:</strong> Batalkan atau ulangi transaksi dengan mudah</li>
+                                <li><strong>Export:</strong> Unduh laporan dalam format PDF langsung atau JSON</li>
+                                <li><strong>System:</strong> Empat format dalam satu input data mentah</li>
                             </ul>
                         </div>
 
@@ -115,23 +115,34 @@
         <!-- App Section (Hidden Initially) -->
         <div id="appSection" class="app-section" style="display: none;">
             <div class="app-layout">
-                <!-- Input Panel -->
+
+                <!-- Input Panel — horizontal bar full width -->
                 <div class="input-panel">
                     <div class="panel-header">
                         <h3>Transaction Entry</h3>
                         <span class="status-badge" id="statusBadge">Ready</span>
                     </div>
 
-                    <!-- Transaction Input -->
-                    <div class="input-group">
-                        <label for="transactionInput">Enter Transaction</label>
-                        <input 
-                            type="text" 
-                            id="transactionInput" 
-                            placeholder="Format: item_name amount quantity date (e.g., pulpen 3000 45 2025-01-15)"
-                            class="transaction-input"
-                        >
-                        <small class="help-text">Press Enter to submit or leave date empty for today</small>
+                    <div class="input-panel-row">
+                        <!-- Transaction Input -->
+                        <div class="input-group input-group-main">
+                            <label for="transactionInput">Enter Transaction</label>
+                            <input
+                                type="text"
+                                id="transactionInput"
+                                placeholder="Format: item_name amount quantity date (e.g., pulpen 3000 45 2025-01-15)"
+                                class="transaction-input"
+                            >
+                            <small class="help-text">Press Enter to submit or leave date empty for today</small>
+                        </div>
+
+                        <!-- Action Buttons -->
+                        <div class="action-buttons">
+                            <button class="btn-secondary" id="undoBtn" disabled>↶ Undo</button>
+                            <button class="btn-secondary" id="redoBtn" disabled>↷ Redo</button>
+                            <button class="btn-danger" id="resetBtn">🗑 Reset All</button>
+                            <button class="btn-primary" id="doneBtn">Done</button>
+                        </div>
                     </div>
 
                     <!-- AI Classification Display -->
@@ -140,7 +151,6 @@
                             <h4>AI Classification</h4>
                             <span id="confidenceScore" class="confidence-badge"></span>
                         </div>
-                        
                         <div class="classification-content">
                             <div class="classification-row">
                                 <label>Account:</label>
@@ -163,7 +173,6 @@
                                 <span id="classificationReasoning" class="reasoning-text"></span>
                             </div>
                         </div>
-
                         <div class="classification-actions">
                             <button class="btn-secondary" id="adjustBtn">Adjust</button>
                             <button class="btn-primary" id="confirmBtn">Confirm</button>
@@ -181,17 +190,9 @@
 
                     <!-- Success Message -->
                     <div id="successMessage" class="success-message" style="display: none;"></div>
+                </div><!-- end input-panel -->
 
-                    <!-- Action Buttons -->
-                    <div class="action-buttons">
-                        <button class="btn-secondary" id="undoBtn" disabled>↶ Undo</button>
-                        <button class="btn-secondary" id="redoBtn" disabled>↷ Redo</button>
-                        <button class="btn-danger" id="resetBtn">🗑 Reset All</button>
-                        <button class="btn-primary" id="doneBtn">Done</button>
-                    </div>
-                </div>
-
-                <!-- Display Panel -->
+                <!-- Display Panel — full width di bawah -->
                 <div class="display-panel">
                     <div class="panel-header">
                         <h3>Accounting Reports</h3>
@@ -234,7 +235,7 @@
                         </div>
                     </div>
 
-                    <!-- PDF Export Button -->
+                    <!-- Export Actions -->
                     <div class="export-actions">
                         <button class="btn-primary" id="generatePdfBtn" disabled>
                             📄 Generate PDF
@@ -243,10 +244,10 @@
                             ⬇ Export Data
                         </button>
                     </div>
-                </div>
-            </div>
-        </div>
-    </div>
+                </div><!-- end display-panel -->
+
+            </div><!-- end app-layout -->
+        </div><!-- end appSection -->
 
     <!-- Settings Modal -->
     <div id="settingsModal" class="modal" style="display: none;">

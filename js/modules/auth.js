@@ -101,9 +101,10 @@ class AuthManager {
    */
   logout() {
     try {
+      const userId = this.currentUser; // simpan dulu sebelum di-null
       this.currentUser = null;
       this.stopSessionTimer();
-      storageManager.clearUserData(this.currentUser);
+      if (userId) storageManager.clearUserData(userId);
       return true;
     } catch (error) {
       console.error('Error during logout:', error);
@@ -228,13 +229,13 @@ class AuthManager {
       { code: '3100', name: 'Prive', type: 'Equity', category: 'Ekuitas', balance: 0 },
       // PENDAPATAN (4000-4999)
       { code: '4000', name: 'Penjualan', type: 'Revenue', category: 'Pendapatan Usaha', balance: 0 },
-      { code: '4100', name: 'Retur Penjualan dan Potongan Harga', type: 'Revenue', category: 'Pendapatan Usaha', balance: 0 },
-      { code: '4200', name: 'Potongan Penjualan', type: 'Revenue', category: 'Pendapatan Usaha', balance: 0 },
+      { code: '4100', name: 'Retur Penjualan dan Potongan Harga', type: 'Expense', category: 'Pendapatan Usaha', balance: 0 },
+      { code: '4200', name: 'Potongan Penjualan', type: 'Expense', category: 'Pendapatan Usaha', balance: 0 },
       { code: '4900', name: 'Pendapatan Lain-lain', type: 'Revenue', category: 'Pendapatan Lain', balance: 0 },
       // BEBAN (5000-5999)
       { code: '5010', name: 'Pembelian', type: 'Expense', category: 'Harga Pokok', balance: 0 },
-      { code: '5020', name: 'Retur Pembelian dan Potongan Harga', type: 'Expense', category: 'Harga Pokok', balance: 0 },
-      { code: '5030', name: 'Potongan Pembelian', type: 'Expense', category: 'Harga Pokok', balance: 0 },
+      { code: '5020', name: 'Retur Pembelian dan Potongan Harga', type: 'Revenue', category: 'Harga Pokok', balance: 0 },
+      { code: '5030', name: 'Potongan Pembelian', type: 'Revenue', category: 'Harga Pokok', balance: 0 },
       { code: '5040', name: 'Beban Angkut Pembelian', type: 'Expense', category: 'Harga Pokok', balance: 0 },
       { code: '5100', name: 'Beban Gaji', type: 'Expense', category: 'Beban Usaha', balance: 0 },
       { code: '5200', name: 'Beban Sewa', type: 'Expense', category: 'Beban Usaha', balance: 0 },

@@ -119,23 +119,16 @@ Backend modules telah dibuat dengan standar akuntansi penuh dan siap untuk integ
 - Summary statistics per report
 
 ### 7. **pdf-generator.js** - PDF Generation
-- `generatePDF(reportData, metadata)` - Generate PDF dari report
-- `addHeader(doc, metadata, y)` - Add header section
-- `addReportTitle(doc, title, y)` - Add report title
-- `addGeneralJournalContent(doc, data, y)` - Add GJ content
-- `addGeneralLedgerContent(doc, data, y)` - Add GL content
-- `addTrialBalanceContent(doc, data, y)` - Add TB content
-- `addReversingJournalContent(doc, data, y)` - Add RJ content
+- `generatePDF(reportData, metadata)` - Generate PDF A4, font Times New Roman, bg putih
 - `downloadPDF(blob, filename)` - Download PDF file
 
 **Key Features:**
-- A4 page format
-- Automatic page breaks
-- Professional formatting
-- Header/footer with metadata
-- Table formatting dengan borders
-- Currency formatting
-- Automatic filename generation
+- A4 portrait, margin 12mm, font Times New Roman
+- Tabel dengan border lengkap (vertikal + horizontal), header abu muda
+- Buku Besar: info block per akun (Kode, Nama, Bulan, Tahun, Saldo Awal/Mutasi/Saldo Akhir) + tabel 7 kolom
+- Auto page break dengan repeat header di halaman baru
+- Footer: nomor halaman + "Accounting By Eko Asif"
+- Kompatibel dengan jsPDF UMD (`window.jspdf.jsPDF`)
 
 ### 8. **app.js** - Main Application Controller
 - `initialize(apiKey)` - Initialize aplikasi

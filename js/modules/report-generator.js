@@ -186,6 +186,9 @@ class ReportGenerator {
       type: 'Reversing Journal',
       metadata: metadata,
       entries: sorted,
+      emptyReason: sorted.length === 0
+        ? 'Tidak ada transaksi akrual (akun 2200 atau 1600) yang perlu dibalik.'
+        : null,
       summary: {
         totalEntries: sorted.length,
         totalDebits: sorted.reduce((sum, e) => sum + e.debit, 0),
