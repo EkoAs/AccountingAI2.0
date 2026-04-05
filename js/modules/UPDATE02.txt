@@ -1,0 +1,155 @@
+Mode 5: Jurnal Penyesuaian (Adjusting Entries)
+Tujuannya: Memastikan pendapatan dan beban dicatat pada periode yang benar (Accrual Basis), bukan hanya saat kas masuk/keluar.
+
+1. Aturan Lengkap & Skenarionya
+Ada 5 aturan utama yang harus kamu masukkan ke dalam logika AI Classifier atau Accounting.js kamu untuk mode ini:
+
+A. Penyusutan Aset Tetap (Depreciation)
+Aset seperti kendaraan atau peralatan nilainya berkurang setiap bulan.
+
+Aturan: Debit Beban Penyusutan (5xxx), Kredit Akumulasi Penyusutan (1810).
+
+Contoh: "Penyusutan kendaraan bulan Januari Rp 2.000.000."
+
+B. Pemakaian Perlengkapan (Supplies Expense)
+Perlengkapan (kertas, tinta) yang sudah dipakai harus diubah dari Aset menjadi Beban.
+
+Aturan: Debit Beban Perlengkapan (5xxx), Kredit Perlengkapan (1500).
+
+Contoh: "Sisa perlengkapan di gudang Rp 500.000 (awal Rp 1.500.000)." -> Jurnal selisihnya: Rp 1.000.000.
+
+C. Beban Dibayar di Muka (Prepaid Expense)
+Misal kamu bayar sewa setahun di depan. Setiap bulan, sebagian aset itu "hangus" menjadi beban.
+
+Aturan: Debit Beban Sewa/Asuransi (5xxx), Kredit Sewa/Asuransi Dibayar di Muka (1300/1400).
+
+D. Beban yang Masih Harus Dibayar (Accrued Expense)
+Beban yang sudah terjadi tapi belum dibayar (utang gaji atau listrik).
+
+Aturan: Debit Beban (5xxx), Kredit Utang Gaji/Listrik (2xxx).
+
+Contoh: "Gaji karyawan bulan Januari baru dibayar tanggal 5 Februari."
+
+E. Pendapatan Diterima di Muka (Unearned Revenue)
+Kamu sudah terima uang dari klien, tapi jasa belum selesai dikerjakan.
+
+Aturan: Debit Pendapatan Diterima di Muka (2300), Kredit Pendapatan (4xxx).
+
+
+
+
+=============================================================================
+
+
+
+
+
+Mode 6: Neraca Saldo Setelah Penyesuaian
+Tujuannya: Menggabungkan saldo asli dari Buku Besar (Mode 2) dengan angka-angka dari Jurnal Penyesuaian (Mode 5). 
+Ini adalah daftar saldo "paling jujur" yang kamu miliki.
+
+1. Aturan Lengkap & Logika SistemDalam pemrograman JurnalAI, Mode 6 ini bukan input baru, melainkan fungsi Kalkulasi Ulang.
+Aturan Konsolidasi:Jika akun di Neraca Saldo (Awal) ada di posisi Debit, dan di Jurnal Penyesuaian ada di Debit $\rightarrow$ Ditambah.
+Jika di Neraca Saldo (Awal) Debit, tapi di Penyesuaian Kredit $\rightarrow$ Dikurang.Berlaku sebaliknya untuk posisi Kredit.
+Zeroing Check: Memastikan akun-akun yang sudah "habis" (seperti perlengkapan yang terpakai habis) menunjukkan angka 0, bukan angka negatif.
+
+2. Apa Saja yang Muncul di Jurnal/Tabel Ini?Tabel di Mode 6 akan sangat panjang karena mencakup Semua Akun (1xxx sampai 5xxx) yang sudah diperbarui nilainya:Kas (1000): Biasanya tetap (kecuali ada penyesuaian bank).
+Perlengkapan (1500): Nilainya sudah berkurang (setelah dikurangi pemakaian).Akumulasi Penyusutan (1810): Nilainya bertambah (karena ada beban penyusutan baru).Beban-Beban (5xxx): Muncul beban-beban baru yang tadi diinput di Mode 5 (Beban Gaji terutang, Beban Listrik, dll).
+
+
+
+=========================================================================================
+
+
+
+Dalam standar PSAK, Mode 7 ini wajib terdiri dari 3 laporan utama yang saling mengunci satu sama lain. 
+Berikut aturan super lengkapnya:
+
+1. Laporan Laba Rugi (Income Statement)
+Tujuan: Mengetahui apakah bisnis untung atau rugi dalam periode tersebut.]
+Sumber Data: Hanya akun Pendapatan (4xxx) dan Beban (5xxx) dari Mode 6.
+Aturan Penulisan:Pendapatan Operasional: List semua pendapatan jasa/dagang.
+Beban Operasional: List semua beban (Gaji, Listrik, Sewa, termasuk Beban Penyusutan dari Mode 5).Formula: $Laba/Rugi Bersih = Total Pendapatan - Total Beban$.
+Kebuasan JurnalAI: Jika hasil akhirnya negatif (Rugi), sistem kamu otomatis memberi warna merah pada teks. Jika positif (Laba), warna hijau.
+2. Laporan Perubahan Ekuitas (Statement of Retained Earnings)Tujuan: Menjelaskan kenapa Modal (Equity) berubah dari awal bulan ke akhir bulan.
+Sumber Data: Modal Awal (3xxx), Prive (Pengambilan pribadi), dan Hasil Laba/Rugi dari Laporan 1.Aturan Penulisan:Modal Awal: Saldo awal akun 3000.
+Penambah: Laba Bersih (jika untung).Pengurang: Prive (3xxx) dan Rugi Bersih (jika rugi).Modal Akhir: Ini adalah angka "Sakti" yang akan dibawa ke Laporan Neraca.
+Logika JS: Modal Akhir = Modal Awal + Laba - Prive.3. Laporan Posisi Keuangan / Neraca (Balance Sheet)Tujuan: Menunjukkan posisi harta, utang, dan modal di hari terakhir periode.
+Sumber Data: Akun Aset (1xxx), Liabilitas (2xxx), dan Modal Akhir (dari Laporan 2).Aturan Penulisan (Bentuk Skontro/T-Account):Sisi Kiri (Aset): Kas, Piutang, Perlengkapan, Peralatan, dan Akumulasi Penyusutan (1810) sebagai pengurang peralatan.
+Sisi Kanan (Liabilitas & Ekuitas): Utang Dagang, Utang Gaji, dan Modal Akhir.Syarat Mutlak: Total Aset WAJIB SAMA dengan Total Liabilitas + Ekuitas.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

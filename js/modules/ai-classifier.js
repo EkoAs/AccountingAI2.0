@@ -170,10 +170,11 @@ BEBAN OPERASIONAL:
   → DEBIT Beban Sewa (5200) + KREDIT Kas (1000)
 - bayar_listrik / beban_listrik / pln / token / air / pam / internet / wifi
   → DEBIT Beban Listrik dan Air (5300) + KREDIT Kas (1000)
-- perlengkapan_tunai / beli_perlengkapan / atk / alat_tulis / supplies
-  → DEBIT Beban Perlengkapan (5400) + KREDIT Kas (1000)
+- perlengkapan_tunai / beli_perlengkapan / atk / alat_tulis / supplies / pulpen / kertas / tinta
+  → DEBIT Perlengkapan (1500) + KREDIT Kas (1000)
+  ⚠️ Perlengkapan = ASET (1500) saat dibeli, BUKAN Beban (5400). Beban Perlengkapan (5400) hanya untuk jurnal penyesuaian.
 - perlengkapan_belum_dibayar / perlengkapan_kredit / atk_kredit / atk_belum_dibayar
-  → DEBIT Beban Perlengkapan (5400) + KREDIT Utang Dagang (2000)
+  → DEBIT Perlengkapan (1500) + KREDIT Utang Dagang (2000)
   ⚠️ "belum dibayar" = Utang Dagang (2000), BUKAN Kas
 - beban_iklan / iklan / promosi / advertise / ads / marketing
   → DEBIT Beban Iklan (5710) + KREDIT Kas (1000)
@@ -183,8 +184,9 @@ BEBAN OPERASIONAL:
   → DEBIT Beban Bunga (5800) + KREDIT Kas (1000)
 
 ASET TETAP:
-- beli_peralatan_tunai / peralatan_tunai / equipment_tunai
+- beli_peralatan_tunai / peralatan_tunai / equipment_tunai / komputer / laptop / mesin / kendaraan / mobil / motor / furniture
   → DEBIT Peralatan (1800) + KREDIT Kas (1000)
+  ⚠️ Peralatan (1800) = barang masa manfaat > 1 tahun. Perlengkapan (1500) = barang habis pakai.
 - beli_peralatan_kredit / peralatan_belum_dibayar / peralatan_kredit
   → DEBIT Peralatan (1800) + KREDIT Utang Dagang (2000)
 
@@ -192,15 +194,41 @@ UTANG & PINJAMAN:
 - pinjaman_bank / kredit_bank / loan
   → DEBIT Kas (1000) + KREDIT Utang Bank (2100)
 
+BEBAN DIBAYAR DI MUKA (Prepaid Expenses):
+- sewa_dimuka / sewa_dibayar_dimuka / sewa_setahun / bayar_sewa_dimuka
+  → DEBIT Sewa Dibayar di Muka (1300) + KREDIT Kas (1000)
+  ⚠️ Bayar sewa untuk periode mendatang = ASET (1300), bukan langsung Beban Sewa (5200)
+- asuransi_dimuka / asuransi_dibayar_dimuka / premi_dimuka / asuransi_setahun
+  → DEBIT Asuransi Dibayar di Muka (1400) + KREDIT Kas (1000)
+- bayar_dimuka / dibayar_dimuka / prepaid / bayar_setahun
+  → DEBIT Beban Dibayar Dimuka (1600) + KREDIT Kas (1000)
+
+PENDAPATAN DITERIMA DI MUKA (Unearned Revenue):
+- dp_proyek / panjar / terima_dimuka / terima_dp / uang_muka_terima
+  → DEBIT Kas (1000) + KREDIT Pendapatan Diterima Dimuka (2300)
+  ⚠️ DP/panjar dari klien = LIABILITAS (2300), BUKAN Pendapatan (4xxx). Jasa belum dikerjakan.
+
+PENYUSUTAN (Depreciation):
+- penyusutan / depresiasi / depreciation / beban_penyusutan / penyusutan_peralatan
+  → DEBIT Beban Penyusutan (5500) + KREDIT Akumulasi Penyusutan Peralatan (1810)
+  ⚠️ JANGAN potong langsung akun Peralatan (1800). Gunakan akun kontra 1810.
+
 ═══════════════════════════════════════════════
 ATURAN KRITIS — WAJIB DIPATUHI
 ═══════════════════════════════════════════════
 1. "investor", "investasi", "modal", "setoran" → Modal Pemilik (3000), BUKAN Beban (5xxx)
 2. "belum dibayar", "kredit", "hutang" → akun lawan = Utang Dagang (2000), BUKAN Kas
 3. "tunai", "cash", "bayar" (tanpa "belum") → akun lawan = Kas (1000)
-4. Syarat kredit seperti "2/15, n/30" atau "n/30" → pembelian/penjualan KREDIT
+4. Syarat kredit seperti "2/15, n/30", "n/60", "EOM" → transaksi KREDIT (Utang/Piutang), BUKAN tunai
 5. Gunakan HANYA kode akun yang ada di DAFTAR AKUN TERSEDIA di atas
 6. Setiap transaksi menghasilkan TEPAT 1 debit dan 1 kredit (double-entry)
+7. PERLENGKAPAN (kertas, pulpen, ATK, supplies): gunakan Perlengkapan (1500) — ASET, bukan Beban (5400). Beban Perlengkapan (5400) hanya dipakai saat jurnal penyesuaian akhir periode.
+8. PERALATAN (1800): hanya untuk barang dengan masa manfaat > 1 tahun (komputer, mesin, kendaraan, furniture). Perlengkapan (1500) untuk barang habis pakai (kertas, tinta, ATK).
+9. Kata "hutang" atau "utang" tanpa konteks spesifik → default Kas (1000) Debit, Utang Dagang (2000) Kredit. Gunakan kata kunci spesifik untuk hasil lebih akurat.
+10. BEBAN DIBAYAR DI MUKA: sewa/asuransi untuk periode mendatang → Aset (1300/1400/1600), BUKAN langsung Beban (5xxx).
+11. PENDAPATAN DITERIMA DI MUKA: DP/panjar dari klien → Liabilitas (2300), BUKAN Pendapatan (4xxx).
+12. PENYUSUTAN: selalu Debit Beban Penyusutan (5500) + Kredit Akumulasi Penyusutan (1810). JANGAN potong Peralatan (1800) langsung.
+13. Kata kunci dengan underscore (mis. "modal_usaha", "sewa_dimuka") — kenali setiap kata di dalamnya. "modal_usaha" mengandung "modal" dan "usaha", keduanya relevan untuk klasifikasi.
 
 Jawab HANYA dalam format JSON valid (tanpa markdown, tanpa komentar):
 {

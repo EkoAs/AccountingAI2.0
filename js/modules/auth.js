@@ -215,6 +215,8 @@ class AuthManager {
       { code: '1010', name: 'Bank', type: 'Asset', category: 'Aset Lancar', balance: 0 },
       { code: '1100', name: 'Piutang Dagang', type: 'Asset', category: 'Aset Lancar', balance: 0 },
       { code: '1200', name: 'Persediaan Barang Dagangan', type: 'Asset', category: 'Aset Lancar', balance: 0 },
+      { code: '1300', name: 'Sewa Dibayar di Muka', type: 'Asset', category: 'Aset Lancar', balance: 0 },
+      { code: '1400', name: 'Asuransi Dibayar di Muka', type: 'Asset', category: 'Aset Lancar', balance: 0 },
       { code: '1500', name: 'Perlengkapan', type: 'Asset', category: 'Aset Lancar', balance: 0 },
       { code: '1600', name: 'Beban Dibayar Dimuka', type: 'Asset', category: 'Aset Lancar', balance: 0 },
       { code: '1800', name: 'Peralatan', type: 'Asset', category: 'Aset Tetap', balance: 0 },

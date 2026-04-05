@@ -162,184 +162,22 @@ class UIManager {
 
     if (this.elements.emptyState) this.elements.emptyState.style.display = 'none';
 
+    const fmt = this.formatCurrency.bind(this);
+    const el  = this.elements;
+
     switch (report.type) {
-      case 'General Journal':
-        this._renderGeneralJournal(report);
-        break;
-      case 'General Ledger':
-        this._renderGeneralLedger(report);
-        break;
-      case 'Trial Balance':
-        this._renderTrialBalance(report);
-        break;
-      case 'Reversing Journal':
-        this._renderReversingJournal(report);
-        break;
+      case 'General Journal':   renderGeneralJournal(report, el, fmt);   break;
+      case 'General Ledger':    renderGeneralLedger(report, el, fmt);    break;
+      case 'Trial Balance':     renderTrialBalance(report, el, fmt);     break;
+      case 'Reversing Journal': renderReversingJournal(report, el, fmt); break;
     }
   }
 
-  _renderGeneralJournal(report) {
-    // Reset table layout dari buku besar jika sebelumnya aktif
-    const table = this.elements.tableBody.closest('table');
-    if (table) {
-      const oldCg = table.querySelector('colgroup');
-      if (oldCg) oldCg.remove();
-      table.style.tableLayout = '';
-      table.style.width = '';
-    }
-
-    this.elements.tableHeader.innerHTML =
-      '<th>Tanggal</th><th>Kode Akun</th><th>Nama Akun</th><th>Keterangan</th><th>Debet</th><th>Kredit</th>';
-    const rows = report.entries.map(e =>
-      '<tr><td>' + e.date + '</td><td>' + (e.accountCode || '-') + '</td><td>' + (e.account || '-') + '</td><td>' + e.description + '</td>' +
-      '<td class="amount-debit">' + (e.debit > 0 ? this.formatCurrency(e.debit) : '-') + '</td>' +
-      '<td class="amount-credit">' + (e.credit > 0 ? this.formatCurrency(e.credit) : '-') + '</td></tr>'
-    );
-    // Total row
-    rows.push(
-      '<tr class="total-row"><td colspan="4"><strong>Total</strong></td>' +
-      '<td class="amount-debit"><strong>' + this.formatCurrency(report.summary.totalDebits) + '</strong></td>' +
-      '<td class="amount-credit"><strong>' + this.formatCurrency(report.summary.totalCredits) + '</strong></td></tr>'
-    );
-    this.elements.tableBody.innerHTML = rows.join('');
-  }
-
-  _renderGeneralLedger(report) {
-    this.elements.tableHeader.innerHTML = '';
-    this.elements.tableBody.innerHTML = '';
-
-    if (!report.accounts || report.accounts.length === 0) {
-      if (this.elements.emptyState) this.elements.emptyState.style.display = 'flex';
-      return;
-    }
-
-    // Inject colgroup untuk lebar kolom proporsional — paksa fit dalam container
-    // 7 kolom: Tanggal | Keterangan | No Ref | Debet | Kredit | Saldo D | Saldo K
-    const colgroup = '<colgroup>' +
-      '<col style="width:11%">' +   // Tanggal
-      '<col style="width:29%">' +   // Keterangan
-      '<col style="width:8%">' +    // No Ref
-      '<col style="width:13%">' +   // Debet
-      '<col style="width:13%">' +   // Kredit
-      '<col style="width:13%">' +   // Saldo D
-      '<col style="width:13%">' +   // Saldo K
-      '</colgroup>';
-
-    // Inject colgroup ke tabel (sebelum thead)
-    const table = this.elements.tableBody.closest('table');
-    if (table) {
-      // Hapus colgroup lama jika ada
-      const oldCg = table.querySelector('colgroup');
-      if (oldCg) oldCg.remove();
-      table.insertAdjacentHTML('afterbegin', colgroup);
-      table.style.tableLayout = 'fixed';
-      table.style.width = '100%';
-    }
-
-    const html = report.accounts.map(account => {
-      const monthNames = ['Januari','Februari','Maret','April','Mei','Juni',
-                          'Juli','Agustus','September','Oktober','November','Desember'];
-      const bulan = monthNames[(account.month || 1) - 1] || account.month;
-      const tahun = account.year || '-';
-
-      const txnRows = account.transactions.map(t =>
-        '<tr>' +
-        '<td style="word-break:keep-all">' + t.date + '</td>' +
-        '<td style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap">' + t.description + '</td>' +
-        '<td class="ref-col">' + t.ref + '</td>' +
-        '<td class="amount-debit">' + (t.debit > 0 ? this.formatCurrency(t.debit) : '-') + '</td>' +
-        '<td class="amount-credit">' + (t.credit > 0 ? this.formatCurrency(t.credit) : '-') + '</td>' +
-        '<td class="amount-debit">' + (t.balanceDebit > 0 ? this.formatCurrency(t.balanceDebit) : '-') + '</td>' +
-        '<td class="amount-credit">' + (t.balanceCredit > 0 ? this.formatCurrency(t.balanceCredit) : '-') + '</td>' +
-        '</tr>'
-      ).join('');
-
-      return `
-        <tr class="ledger-account-header">
-          <td colspan="7">
-            <div class="ledger-account-meta">
-              <div class="ledger-meta-left">
-                <span><strong>Kode</strong> : ${account.accountCode}</span>
-                <span><strong>Nama Akun</strong> : ${account.accountName}</span>
-              </div>
-              <div class="ledger-meta-right">
-                <span><strong>Bulan</strong> : ${bulan}</span>
-                <span><strong>Tahun</strong> : ${tahun}</span>
-              </div>
-            </div>
-            <div class="ledger-balance-summary">
-              <div class="ledger-balance-group">
-                <span>Saldo Awal Debet: <strong>${this.formatCurrency(account.openingBalanceDebit)}</strong></span>
-                <span>Saldo Awal Kredit: <strong>${this.formatCurrency(account.openingBalanceCredit)}</strong></span>
-              </div>
-              <div class="ledger-balance-group">
-                <span>Mutasi Debet: <strong>${this.formatCurrency(account.totalDebits)}</strong></span>
-                <span>Mutasi Kredit: <strong>${this.formatCurrency(account.totalCredits)}</strong></span>
-              </div>
-              <div class="ledger-balance-group">
-                <span>Saldo Akhir Debet: <strong>${this.formatCurrency(account.closingBalanceDebit)}</strong></span>
-                <span>Saldo Akhir Kredit: <strong>${this.formatCurrency(account.closingBalanceCredit)}</strong></span>
-              </div>
-            </div>
-          </td>
-        </tr>
-        <tr class="ledger-col-header">
-          <th>Tanggal</th><th>Keterangan</th><th>No Ref</th>
-          <th>Debet</th><th>Kredit</th>
-          <th colspan="2" class="saldo-header">Saldo</th>
-        </tr>
-        <tr class="ledger-col-subheader">
-          <th colspan="5"></th><th>Debet</th><th>Kredit</th>
-        </tr>
-        ${txnRows}
-        <tr class="ledger-total-row">
-          <td colspan="3"><strong>Total</strong></td>
-          <td class="amount-debit"><strong>${this.formatCurrency(account.totalDebits)}</strong></td>
-          <td class="amount-credit"><strong>${this.formatCurrency(account.totalCredits)}</strong></td>
-          <td colspan="2"></td>
-        </tr>
-        <tr class="ledger-spacer"><td colspan="7"></td></tr>
-      `;
-    }).join('');
-
-    this.elements.tableBody.innerHTML = html;
-  }
-
-  _renderTrialBalance(report) {
-    this.elements.tableHeader.innerHTML =
-      '<th>Kode Akun</th><th>Nama Akun</th><th>Debet</th><th>Kredit</th>';
-    const rows = report.entries.map(e =>
-      '<tr><td>' + e.code + '</td><td>' + e.name + '</td>' +
-      '<td class="amount-debit">' + (e.debitBalance > 0 ? this.formatCurrency(e.debitBalance) : '-') + '</td>' +
-      '<td class="amount-credit">' + (e.creditBalance > 0 ? this.formatCurrency(e.creditBalance) : '-') + '</td></tr>'
-    );
-    rows.push(
-      '<tr class="total-row"><td colspan="2"><strong>Total</strong></td>' +
-      '<td class="amount-debit"><strong>' + this.formatCurrency(report.summary.totalDebits) + '</strong></td>' +
-      '<td class="amount-credit"><strong>' + this.formatCurrency(report.summary.totalCredits) + '</strong></td></tr>'
-    );
-    this.elements.tableBody.innerHTML = rows.join('');
-  }
-
-  _renderReversingJournal(report) {
-    this.elements.tableHeader.innerHTML =
-      '<th>Tanggal</th><th>Kode Akun</th><th>Nama Akun</th><th>Keterangan</th><th>Debet</th><th>Kredit</th>';
-
-    if (!report.entries || report.entries.length === 0) {
-      this.elements.tableBody.innerHTML =
-        '<tr><td colspan="6" style="text-align:center;padding:20px;color:var(--color-gray-400);">' +
-        (report.emptyReason || 'Tidak ada entri jurnal pembalik.') +
-        '</td></tr>';
-      return;
-    }
-
-    const rows = report.entries.map(e =>
-      '<tr><td>' + e.date + '</td><td>' + e.accountCode + '</td><td>' + (e.account || '-') + '</td><td>' + e.description + '</td>' +
-      '<td class="amount-debit">' + (e.debit > 0 ? this.formatCurrency(e.debit) : '-') + '</td>' +
-      '<td class="amount-credit">' + (e.credit > 0 ? this.formatCurrency(e.credit) : '-') + '</td></tr>'
-    );
-    this.elements.tableBody.innerHTML = rows.join('');
-  }
+  // Kept for backward compatibility — delegates to per-mode files
+  _renderGeneralJournal(report)   { renderGeneralJournal(report, this.elements, this.formatCurrency.bind(this)); }
+  _renderGeneralLedger(report)    { renderGeneralLedger(report, this.elements, this.formatCurrency.bind(this)); }
+  _renderTrialBalance(report)     { renderTrialBalance(report, this.elements, this.formatCurrency.bind(this)); }
+  _renderReversingJournal(report) { renderReversingJournal(report, this.elements, this.formatCurrency.bind(this)); }
 
   updateUndoRedoButtons(canUndo, canRedo) {
     if (this.elements.undoBtn) this.elements.undoBtn.disabled = !canUndo;

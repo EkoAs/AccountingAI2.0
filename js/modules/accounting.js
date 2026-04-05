@@ -114,15 +114,18 @@ class AccountingCalculator {
       accountTypes[account.code] = account.type;
     });
     transactions.forEach(txn => {
-      if (txn.accountCode && balances.hasOwnProperty(txn.accountCode)) {
-        const type = accountTypes[txn.accountCode];
-        const isDebitNormal = type === 'Asset' || type === 'Expense';
-        if (isDebitNormal) {
-          balances[txn.accountCode] += txn.debitAmount - txn.creditAmount;
-        } else {
-          // Credit-normal: positive balance = credit side
-          balances[txn.accountCode] += txn.creditAmount - txn.debitAmount;
-        }
+      if (!txn.accountCode) return; // skip transaksi tanpa kode akun
+      // Jika akun tidak ada di chart, tambahkan dinamis agar tidak hilang dari laporan
+      if (!balances.hasOwnProperty(txn.accountCode)) {
+        balances[txn.accountCode] = 0;
+        accountTypes[txn.accountCode] = txn.accountType || 'Asset';
+      }
+      const type = accountTypes[txn.accountCode];
+      const isDebitNormal = type === 'Asset' || type === 'Expense';
+      if (isDebitNormal) {
+        balances[txn.accountCode] += txn.debitAmount - txn.creditAmount;
+      } else {
+        balances[txn.accountCode] += txn.creditAmount - txn.debitAmount;
       }
     });
     return balances;
@@ -170,20 +173,40 @@ class AccountingCalculator {
     const balances = this.calculateAccountBalances(transactions, chartOfAccounts);
     const trialBalance = [];
 
-    chartOfAccounts.forEach(account => {
-      const balance = balances[account.code] || 0;
-      if (balance !== 0) {
-        // Normal balance: Asset & Expense = Debit (positive), Liability/Equity/Revenue = Credit (negative)
-        const isDebitNormal = account.type === 'Asset' || account.type === 'Expense';
-        trialBalance.push({
-          code: account.code,
-          name: account.name,
-          type: account.type,
-          debitBalance: isDebitNormal ? (balance > 0 ? balance : 0) : (balance < 0 ? Math.abs(balance) : 0),
-          creditBalance: isDebitNormal ? (balance < 0 ? Math.abs(balance) : 0) : (balance > 0 ? balance : 0)
-        });
-      }
+    // Buat map akun dari chart untuk lookup cepat
+    const chartMap = {};
+    chartOfAccounts.forEach(a => { chartMap[a.code] = a; });
+
+    // Iterasi semua kode akun di balances (termasuk akun dinamis yang tidak ada di chart)
+    Object.keys(balances).forEach(code => {
+      const balance = balances[code] || 0;
+      if (balance === 0) return;
+
+      // Gunakan data dari chart jika ada, fallback ke data transaksi
+      const account = chartMap[code];
+      const name = account ? account.name : code;
+      const type = account ? account.type : 'Asset';
+
+      const isDebitNormal = type === 'Asset' || type === 'Expense';
+      trialBalance.push({
+        code,
+        name,
+        type,
+        debitBalance:  isDebitNormal ? (balance > 0 ? balance : 0) : (balance < 0 ? Math.abs(balance) : 0),
+        creditBalance: isDebitNormal ? (balance < 0 ? Math.abs(balance) : 0) : (balance > 0 ? balance : 0)
+      });
     });
+
+    // Urutkan sesuai urutan chart of accounts, akun dinamis di akhir
+    trialBalance.sort((a, b) => {
+      const ai = chartOfAccounts.findIndex(x => x.code === a.code);
+      const bi = chartOfAccounts.findIndex(x => x.code === b.code);
+      if (ai === -1 && bi === -1) return a.code.localeCompare(b.code);
+      if (ai === -1) return 1;
+      if (bi === -1) return -1;
+      return ai - bi;
+    });
+
     return trialBalance;
   }
 
@@ -223,6 +246,20 @@ class AccountingCalculator {
 
     // Default offset is Kas (1000)
     const kas = findAccount('1000');
+
+    /**
+     * Matching helper — mengenali keyword dengan dua cara:
+     * 1. Exact substring: "modal" cocok jika deskripsi mengandung "modal"
+     * 2. Underscore split: "modal_usaha" → semua kata ("modal" DAN "usaha") harus ada di deskripsi
+     */
+    const matchesKeyword = (keyword) => {
+      if (lowerDesc.includes(keyword)) return true;
+      if (keyword.includes('_')) {
+        const parts = keyword.split('_');
+        return parts.every(part => part.length > 1 && lowerDesc.includes(part));
+      }
+      return false;
+    };
 
     // Double-entry pattern rules (ordered by specificity — more specific rules FIRST)
     const patterns = [
@@ -329,12 +366,12 @@ class AccountingCalculator {
       // ══════════════════════════════════════════════════════════════════════
       // KREDIT / BELUM DIBAYAR (harus di atas pola tunai generik)
       // ══════════════════════════════════════════════════════════════════════
-      // Perlengkapan belum dibayar → Debit Beban Perlengkapan, Kredit Utang Dagang
+      // Perlengkapan belum dibayar → Debit Perlengkapan (Aset 1500), Kredit Utang Dagang
       {
         keywords: ['perlengkapan_belum_dibayar', 'perlengkapan_kredit', 'beli_perlengkapan_kredit',
                    'supplies_kredit', 'atk_kredit', 'atk_belum_dibayar'],
-        debit: '5400', credit: '2000',
-        reasoning: 'Perlengkapan belum dibayar: Beban Perlengkapan bertambah (Debit), Utang Dagang bertambah (Kredit) — bukan Kas karena belum dibayar tunai',
+        debit: '1500', credit: '2000',
+        reasoning: 'Perlengkapan belum dibayar: Perlengkapan (Aset) bertambah (Debit), Utang Dagang bertambah (Kredit). Perlengkapan adalah Aset saat dibeli, bukan langsung Beban.',
         confidence: 0.97
       },
       // Peralatan belum dibayar → Debit Peralatan, Kredit Utang Dagang
@@ -352,6 +389,61 @@ class AccountingCalculator {
         debit: '5400', credit: '2000',
         reasoning: 'Pembelian kredit/belum dibayar: Beban/Aset bertambah (Debit), Utang Dagang bertambah (Kredit)',
         confidence: 0.95
+      },
+
+      // ══════════════════════════════════════════════════════════════════════
+      // BEBAN DIBAYAR DI MUKA (Prepaid Expenses) — Aset Lancar
+      // ══════════════════════════════════════════════════════════════════════
+      // Sewa dibayar di muka → Debit Sewa Dibayar di Muka (1300), Kredit Kas
+      {
+        keywords: ['sewa_dimuka', 'sewa_dibayar_dimuka', 'bayar_sewa_dimuka',
+                   'prepaid_rent', 'sewa_setahun', 'sewa_tahunan'],
+        debit: '1300', credit: '1000',
+        reasoning: 'Sewa dibayar di muka: Sewa Dibayar di Muka (Aset) bertambah (Debit), Kas berkurang (Kredit). Dicatat sebagai Aset karena manfaatnya belum habis.',
+        confidence: 0.97
+      },
+      // Asuransi dibayar di muka → Debit Asuransi Dibayar di Muka (1400), Kredit Kas
+      {
+        keywords: ['asuransi_dimuka', 'asuransi_dibayar_dimuka', 'bayar_asuransi_dimuka',
+                   'prepaid_insurance', 'asuransi_setahun', 'premi_dimuka'],
+        debit: '1400', credit: '1000',
+        reasoning: 'Asuransi dibayar di muka: Asuransi Dibayar di Muka (Aset) bertambah (Debit), Kas berkurang (Kredit). Dicatat sebagai Aset karena manfaatnya belum habis.',
+        confidence: 0.97
+      },
+      // Beban dibayar di muka generik → Debit Beban Dibayar Dimuka (1600), Kredit Kas
+      {
+        keywords: ['bayar_dimuka', 'dibayar_dimuka', 'prepaid', 'bayar_setahun',
+                   'bayar_tahunan', 'dimuka'],
+        debit: '1600', credit: '1000',
+        reasoning: 'Beban dibayar di muka: Beban Dibayar Dimuka (Aset) bertambah (Debit), Kas berkurang (Kredit). Dicatat sebagai Aset karena manfaatnya belum habis.',
+        confidence: 0.93
+      },
+
+      // ══════════════════════════════════════════════════════════════════════
+      // PENDAPATAN DITERIMA DI MUKA (Unearned Revenue) — Liabilitas
+      // ══════════════════════════════════════════════════════════════════════
+      // DP / panjar / terima di muka → Debit Kas, Kredit Pendapatan Diterima Dimuka (2300)
+      {
+        keywords: ['dp_proyek', 'dp_jasa', 'dp_pekerjaan', 'uang_muka_proyek',
+                   'panjar', 'terima_dimuka', 'pendapatan_dimuka', 'unearned_revenue',
+                   'terima_dp', 'bayar_dp', 'down_payment', 'uang_muka_terima'],
+        debit: '1000', credit: '2300',
+        reasoning: 'Pendapatan diterima di muka: Kas bertambah (Debit), Pendapatan Diterima Dimuka (Liabilitas) bertambah (Kredit). Ini BUKAN pendapatan karena jasa belum dikerjakan.',
+        confidence: 0.97
+      },
+
+      // ══════════════════════════════════════════════════════════════════════
+      // PENYUSUTAN (Depreciation)
+      // ══════════════════════════════════════════════════════════════════════
+      // Penyusutan peralatan → Debit Beban Penyusutan (5500), Kredit Akum. Penyusutan (1810)
+      // ⚠️ JANGAN potong langsung akun Aset (1800)
+      {
+        keywords: ['penyusutan', 'depresiasi', 'depreciation', 'beban_penyusutan',
+                   'penyusutan_peralatan', 'penyusutan_kendaraan', 'penyusutan_mesin',
+                   'akumulasi_penyusutan'],
+        debit: '5500', credit: '1810',
+        reasoning: 'Penyusutan: Beban Penyusutan bertambah (Debit), Akumulasi Penyusutan Peralatan bertambah (Kredit). JANGAN potong langsung akun Aset (1800).',
+        confidence: 0.98
       },
 
       // ══════════════════════════════════════════════════════════════════════
@@ -422,12 +514,14 @@ class AccountingCalculator {
         reasoning: 'Beban utilitas: Beban Listrik/Air bertambah (Debit), Kas berkurang (Kredit)',
         confidence: 0.95
       },
+      // Perlengkapan tunai → Debit Perlengkapan (Aset 1500), Kredit Kas
+      // Catatan: Perlengkapan adalah Aset saat dibeli. Dipindah ke Beban (5400) saat jurnal penyesuaian.
       {
         keywords: ['pulpen', 'kertas', 'tinta', 'sticky', 'penghapus', 'penggaris',
                    'stapler', 'klip', 'amplop', 'pensil', 'spidol', 'alat_tulis',
                    'perlengkapan', 'supplies', 'atk', 'buku_tulis'],
-        debit: '5400', credit: '1000',
-        reasoning: 'Beban perlengkapan tunai: Beban Perlengkapan bertambah (Debit), Kas berkurang (Kredit)',
+        debit: '1500', credit: '1000',
+        reasoning: 'Pembelian perlengkapan tunai: Perlengkapan (Aset) bertambah (Debit), Kas berkurang (Kredit). Perlengkapan dicatat sebagai Aset terlebih dahulu, bukan langsung Beban.',
         confidence: 0.92
       },
       {
@@ -459,17 +553,20 @@ class AccountingCalculator {
       // ══════════════════════════════════════════════════════════════════════
       // UTANG & PINJAMAN
       // ══════════════════════════════════════════════════════════════════════
-      {
-        keywords: ['hutang', 'utang', 'payable'],
-        debit: '5400', credit: '2000',
-        reasoning: 'Pembelian kredit: Beban/Aset bertambah (Debit), Utang Dagang bertambah (Kredit)',
-        confidence: 0.88
-      },
+      // Pinjaman / terima uang tunai → Debit Kas, Kredit Utang Bank
       {
         keywords: ['pinjaman', 'loan', 'kredit_bank', 'pinjam'],
         debit: '1000', credit: '2100',
         reasoning: 'Pinjaman bank: Kas bertambah (Debit), Utang Bank bertambah (Kredit)',
         confidence: 0.95
+      },
+      // Hutang/utang generik — default: terima uang tunai → Debit Kas, Kredit Utang Dagang
+      // (lebih aman daripada asumsi ke Beban Perlengkapan)
+      {
+        keywords: ['hutang', 'utang', 'payable'],
+        debit: '1000', credit: '2000',
+        reasoning: 'Hutang/utang generik: Kas bertambah (Debit), Utang Dagang bertambah (Kredit). Gunakan kata kunci lebih spesifik (mis. pembelian_kredit, perlengkapan_belum_dibayar) untuk klasifikasi yang lebih tepat.',
+        confidence: 0.70
       },
 
       // ══════════════════════════════════════════════════════════════════════
@@ -486,7 +583,7 @@ class AccountingCalculator {
     // Find matching pattern
     for (const pattern of patterns) {
       for (const keyword of pattern.keywords) {
-        if (lowerDesc.includes(keyword)) {
+        if (matchesKeyword(keyword)) {
           return {
             debitAccount: findAccount(pattern.debit),
             creditAccount: findAccount(pattern.credit),
