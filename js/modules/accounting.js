@@ -447,8 +447,60 @@ class AccountingCalculator {
       },
 
       // ══════════════════════════════════════════════════════════════════════
-      // MODAL & EKUITAS
+      // JURNAL PENYESUAIAN — MODE 5
       // ══════════════════════════════════════════════════════════════════════
+      // A. Penyusutan sudah ada di seksi PENYUSUTAN di atas — tidak duplikat
+      // B. Pemakaian Perlengkapan → Debit Beban Perlengkapan, Kredit Perlengkapan (Aset)
+      {
+        keywords: ['pemakaian_perlengkapan', 'perlengkapan_terpakai', 'supplies_used',
+                   'pemakaian_atk', 'beban_perlengkapan_penyesuaian'],
+        debit: '5400', credit: '1500',
+        reasoning: 'Pemakaian perlengkapan: Beban Perlengkapan bertambah (Debit), Perlengkapan (Aset) berkurang (Kredit). Kebalikan dari saat beli.',
+        confidence: 0.98
+      },
+      // C. Sewa dibayar dimuka jatuh tempo → Debit Beban Sewa, Kredit Sewa Dibayar di Muka
+      {
+        keywords: ['sewa_jatuh_tempo', 'beban_sewa_penyesuaian', 'sewa_dimuka_jatuh',
+                   'sewa_bulan_ini', 'sewa_expired'],
+        debit: '5200', credit: '1300',
+        reasoning: 'Sewa dibayar dimuka jatuh tempo: Beban Sewa bertambah (Debit), Sewa Dibayar di Muka (Aset) berkurang (Kredit).',
+        confidence: 0.97
+      },
+      // C2. Asuransi dibayar dimuka jatuh tempo → Debit Beban Asuransi, Kredit Asuransi Dibayar di Muka
+      {
+        keywords: ['asuransi_jatuh_tempo', 'beban_asuransi_penyesuaian', 'asuransi_dimuka_jatuh',
+                   'asuransi_expired', 'premi_jatuh_tempo'],
+        debit: '5600', credit: '1400',
+        reasoning: 'Asuransi dibayar dimuka jatuh tempo: Beban Asuransi bertambah (Debit), Asuransi Dibayar di Muka (Aset) berkurang (Kredit).',
+        confidence: 0.97
+      },
+      // D. Beban masih harus dibayar (Accrued) → Debit Beban, Kredit Utang Beban
+      {
+        keywords: ['gaji_terutang', 'utang_gaji', 'gaji_belum_dibayar', 'accrued_salary'],
+        debit: '5100', credit: '2200',
+        reasoning: 'Gaji terutang: Beban Gaji bertambah (Debit), Beban Yang Masih Harus Dibayar (Liabilitas) bertambah (Kredit).',
+        confidence: 0.97
+      },
+      {
+        keywords: ['listrik_terutang', 'utang_listrik', 'listrik_belum_dibayar', 'accrued_utility'],
+        debit: '5300', credit: '2200',
+        reasoning: 'Listrik terutang: Beban Listrik bertambah (Debit), Beban Yang Masih Harus Dibayar (Liabilitas) bertambah (Kredit).',
+        confidence: 0.97
+      },
+      {
+        keywords: ['beban_terutang', 'masih_harus_dibayar', 'accrued_expense', 'accrued'],
+        debit: '5900', credit: '2200',
+        reasoning: 'Beban terutang: Beban Lain-lain bertambah (Debit), Beban Yang Masih Harus Dibayar (Liabilitas) bertambah (Kredit).',
+        confidence: 0.90
+      },
+      // E. Pendapatan diterima dimuka diakui → Debit Pendapatan Diterima Dimuka, Kredit Pendapatan
+      {
+        keywords: ['pendapatan_diakui', 'jasa_selesai', 'dp_selesai', 'panjar_selesai',
+                   'unearned_earned', 'pendapatan_dimuka_diakui'],
+        debit: '2300', credit: '4000',
+        reasoning: 'Pendapatan diterima dimuka diakui: Pendapatan Diterima Dimuka (Liabilitas) berkurang (Debit), Pendapatan bertambah (Kredit). Jasa sudah selesai dikerjakan.',
+        confidence: 0.97
+      },
       {
         keywords: ['investor', 'investasi', 'modal', 'setoran', 'modal_awal',
                    'modal_usaha', 'capital', 'owner_equity', 'equity_in'],

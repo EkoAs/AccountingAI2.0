@@ -166,10 +166,13 @@ class UIManager {
     const el  = this.elements;
 
     switch (report.type) {
-      case 'General Journal':   renderGeneralJournal(report, el, fmt);   break;
-      case 'General Ledger':    renderGeneralLedger(report, el, fmt);    break;
-      case 'Trial Balance':     renderTrialBalance(report, el, fmt);     break;
-      case 'Reversing Journal': renderReversingJournal(report, el, fmt); break;
+      case 'General Journal':          renderGeneralJournal(report, el, fmt);          break;
+      case 'General Ledger':           renderGeneralLedger(report, el, fmt);           break;
+      case 'Trial Balance':            renderTrialBalance(report, el, fmt);            break;
+      case 'Reversing Journal':        renderReversingJournal(report, el, fmt);        break;
+      case 'Adjusting Entries':        renderAdjustingEntries(report, el, fmt);        break;
+      case 'Adjusted Trial Balance':   renderAdjustedTrialBalance(report, el, fmt);   break;
+      case 'Financial Statements':     renderFinancialStatements(report, el, fmt);     break;
     }
   }
 

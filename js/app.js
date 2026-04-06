@@ -180,7 +180,11 @@ class AccountingApp {
         classification: classified.accountType,
         aiConfidence: classified.confidence || 0,
         reasoning: classified.reasoning || 'Klasifikasi selesai',
-        fallback: classification.fallback || false
+        fallback: classification.fallback || false,
+        // Adjusting type — deteksi dari deskripsi untuk Mode 5
+        adjustingType: (typeof detectAdjustingType === 'function')
+          ? detectAdjustingType(parsed.description)
+          : null
       };
     } catch (error) {
       console.error('Error processing transaction:', error);
@@ -211,7 +215,8 @@ class AccountingApp {
         debitAmount: transactionData.totalAmount,
         creditAmount: 0,
         classification: transactionData.classification,
-        aiConfidence: transactionData.aiConfidence
+        aiConfidence: transactionData.aiConfidence,
+        adjustingType: transactionData.adjustingType || null
       });
 
       if (debitEntry.error) return { error: debitEntry.error };
@@ -229,7 +234,8 @@ class AccountingApp {
         debitAmount: 0,
         creditAmount: transactionData.totalAmount,
         classification: transactionData.offsetAccountType || 'Asset',
-        aiConfidence: transactionData.aiConfidence
+        aiConfidence: transactionData.aiConfidence,
+        adjustingType: transactionData.adjustingType || null
       });
 
       if (creditEntry.error) return { error: creditEntry.error };

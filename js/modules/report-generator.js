@@ -6,7 +6,10 @@
 
 class ReportGenerator {
   constructor() {
-    this.reportTypes = ['general-journal', 'general-ledger', 'trial-balance', 'reversing-journal'];
+    this.reportTypes = [
+      'general-journal', 'general-ledger', 'trial-balance', 'reversing-journal',
+      'adjusting-entries', 'adjusted-trial-balance', 'financial-statements'
+    ];
   }
 
   generateGeneralJournal(transactions, chartOfAccounts, metadata) {
@@ -27,10 +30,13 @@ class ReportGenerator {
 
   generateReport(reportType, transactions, chartOfAccounts, metadata) {
     switch (reportType) {
-      case 'general-journal':   return this.generateGeneralJournal(transactions, chartOfAccounts, metadata);
-      case 'general-ledger':    return this.generateGeneralLedger(transactions, chartOfAccounts, metadata);
-      case 'trial-balance':     return this.generateTrialBalance(transactions, chartOfAccounts, metadata);
-      case 'reversing-journal': return this.generateReversingJournal(transactions, chartOfAccounts, metadata);
+      case 'general-journal':        return this.generateGeneralJournal(transactions, chartOfAccounts, metadata);
+      case 'general-ledger':         return this.generateGeneralLedger(transactions, chartOfAccounts, metadata);
+      case 'trial-balance':          return this.generateTrialBalance(transactions, chartOfAccounts, metadata);
+      case 'reversing-journal':      return this.generateReversingJournal(transactions, chartOfAccounts, metadata);
+      case 'adjusting-entries':      return generateAdjustingEntries(transactions, chartOfAccounts, metadata);
+      case 'adjusted-trial-balance': return generateAdjustedTrialBalance(transactions, chartOfAccounts, metadata);
+      case 'financial-statements':   return generateFinancialStatements(transactions, chartOfAccounts, metadata);
       default: return null;
     }
   }

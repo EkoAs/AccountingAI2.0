@@ -38,10 +38,13 @@ class PDFGenerator {
       const helpers = this._buildHelpers(doc);
 
       switch (reportData.type) {
-        case 'General Journal':   y = pdfGeneralJournal(doc, reportData, y, helpers);   break;
-        case 'General Ledger':    y = pdfGeneralLedger(doc, reportData, y, helpers);    break;
-        case 'Trial Balance':     y = pdfTrialBalance(doc, reportData, y, helpers);     break;
-        case 'Reversing Journal': y = pdfReversingJournal(doc, reportData, y, helpers); break;
+        case 'General Journal':        y = pdfGeneralJournal(doc, reportData, y, helpers);        break;
+        case 'General Ledger':         y = pdfGeneralLedger(doc, reportData, y, helpers);         break;
+        case 'Trial Balance':          y = pdfTrialBalance(doc, reportData, y, helpers);          break;
+        case 'Reversing Journal':      y = pdfReversingJournal(doc, reportData, y, helpers);      break;
+        case 'Adjusting Entries':      y = pdfAdjustingEntries(doc, reportData, y, helpers);      break;
+        case 'Adjusted Trial Balance': y = pdfAdjustedTrialBalance(doc, reportData, y, helpers);  break;
+        case 'Financial Statements':   y = pdfFinancialStatements(doc, reportData, y, helpers);   break;
       }
 
       this._addPageNumbers(doc);

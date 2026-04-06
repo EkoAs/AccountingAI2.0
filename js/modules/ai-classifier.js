@@ -214,6 +214,38 @@ PENYUSUTAN (Depreciation):
   ⚠️ JANGAN potong langsung akun Peralatan (1800). Gunakan akun kontra 1810.
 
 ═══════════════════════════════════════════════
+JURNAL PENYESUAIAN (ADJUSTING ENTRIES) — MODE 5
+═══════════════════════════════════════════════
+A. PENYUSUTAN ASET TETAP:
+- penyusutan / depresiasi / penyusutan_kendaraan / penyusutan_peralatan / penyusutan_mesin
+  → DEBIT Beban Penyusutan (5500) + KREDIT Akumulasi Penyusutan Peralatan (1810)
+  ⚠️ JANGAN potong Peralatan (1800) langsung
+
+B. PEMAKAIAN PERLENGKAPAN:
+- pemakaian_perlengkapan / perlengkapan_terpakai / pemakaian_atk / supplies_used
+  → DEBIT Beban Perlengkapan (5400) + KREDIT Perlengkapan (1500)
+  ⚠️ Ini kebalikan dari saat beli — sekarang Perlengkapan (Aset) berkurang, Beban bertambah
+
+C. BEBAN DIBAYAR DI MUKA JATUH TEMPO:
+- sewa_jatuh_tempo / beban_sewa_penyesuaian / sewa_dimuka_jatuh / sewa_bulan_ini
+  → DEBIT Beban Sewa (5200) + KREDIT Sewa Dibayar di Muka (1300)
+- asuransi_jatuh_tempo / beban_asuransi_penyesuaian / asuransi_dimuka_jatuh
+  → DEBIT Beban Asuransi (5600) + KREDIT Asuransi Dibayar di Muka (1400)
+
+D. BEBAN MASIH HARUS DIBAYAR (Accrued Expense):
+- gaji_terutang / utang_gaji / gaji_belum_dibayar / accrued_salary
+  → DEBIT Beban Gaji (5100) + KREDIT Beban Yang Masih Harus Dibayar (2200)
+- listrik_terutang / utang_listrik / listrik_belum_dibayar
+  → DEBIT Beban Listrik dan Air (5300) + KREDIT Beban Yang Masih Harus Dibayar (2200)
+- beban_terutang / masih_harus_dibayar / accrued_expense
+  → DEBIT Beban terkait (5xxx) + KREDIT Beban Yang Masih Harus Dibayar (2200)
+
+E. PENDAPATAN DITERIMA DI MUKA DIAKUI:
+- pendapatan_diakui / jasa_selesai / dp_selesai / panjar_selesai / unearned_earned
+  → DEBIT Pendapatan Diterima Dimuka (2300) + KREDIT Penjualan/Pendapatan (4000)
+  ⚠️ Ini kebalikan dari saat terima DP — sekarang Liabilitas berkurang, Pendapatan diakui
+
+═══════════════════════════════════════════════
 ATURAN KRITIS — WAJIB DIPATUHI
 ═══════════════════════════════════════════════
 1. "investor", "investasi", "modal", "setoran" → Modal Pemilik (3000), BUKAN Beban (5xxx)
@@ -229,6 +261,11 @@ ATURAN KRITIS — WAJIB DIPATUHI
 11. PENDAPATAN DITERIMA DI MUKA: DP/panjar dari klien → Liabilitas (2300), BUKAN Pendapatan (4xxx).
 12. PENYUSUTAN: selalu Debit Beban Penyusutan (5500) + Kredit Akumulasi Penyusutan (1810). JANGAN potong Peralatan (1800) langsung.
 13. Kata kunci dengan underscore (mis. "modal_usaha", "sewa_dimuka") — kenali setiap kata di dalamnya. "modal_usaha" mengandung "modal" dan "usaha", keduanya relevan untuk klasifikasi.
+14. JURNAL PENYESUAIAN — 5 tipe khusus dengan logika terbalik dari transaksi biasa:
+    - pemakaian_perlengkapan: Debit Beban Perlengkapan (5400), Kredit Perlengkapan (1500) — kebalikan dari saat beli
+    - sewa/asuransi jatuh tempo: Debit Beban (5200/5600), Kredit Prepaid (1300/1400) — kebalikan dari saat bayar dimuka
+    - beban terutang: Debit Beban (5xxx), Kredit Beban Masih Harus Dibayar (2200)
+    - pendapatan diakui: Debit Pendapatan Diterima Dimuka (2300), Kredit Pendapatan (4000) — kebalikan dari saat terima DP
 
 Jawab HANYA dalam format JSON valid (tanpa markdown, tanpa komentar):
 {
