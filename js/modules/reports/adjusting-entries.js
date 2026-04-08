@@ -6,17 +6,20 @@
 
 /* ── Kata kunci penyesuaian untuk deteksi otomatis ───────────────────── */
 const ADJUSTING_KEYWORDS = {
-  depreciation: ['penyusutan', 'depresiasi', 'depreciation', 'beban_penyusutan',
-                 'penyusutan_kendaraan', 'penyusutan_peralatan', 'penyusutan_mesin'],
-  supplies:     ['pemakaian_perlengkapan', 'perlengkapan_terpakai', 'supplies_used',
-                 'beban_perlengkapan_penyesuaian', 'pemakaian_atk'],
-  prepaid:      ['sewa_jatuh_tempo', 'asuransi_jatuh_tempo', 'prepaid_expired',
-                 'beban_sewa_penyesuaian', 'beban_asuransi_penyesuaian',
-                 'sewa_dimuka_jatuh', 'asuransi_dimuka_jatuh'],
-  accrued:      ['gaji_terutang', 'listrik_terutang', 'beban_terutang', 'accrued',
-                 'masih_harus_dibayar', 'utang_gaji', 'utang_listrik', 'utang_beban'],
-  unearned:     ['pendapatan_diakui', 'jasa_selesai', 'unearned_earned',
-                 'pendapatan_dimuka_diakui', 'dp_selesai', 'panjar_selesai']
+  depreciation:    ['penyusutan', 'depresiasi', 'depreciation', 'beban_penyusutan',
+                    'penyusutan_kendaraan', 'penyusutan_peralatan', 'penyusutan_mesin'],
+  supplies:        ['pemakaian_perlengkapan', 'perlengkapan_terpakai', 'supplies_used',
+                    'beban_perlengkapan_penyesuaian', 'pemakaian_atk'],
+  prepaid:         ['sewa_jatuh_tempo', 'asuransi_jatuh_tempo', 'prepaid_expired',
+                    'beban_sewa_penyesuaian', 'beban_asuransi_penyesuaian',
+                    'sewa_dimuka_jatuh', 'asuransi_dimuka_jatuh'],
+  accrued:         ['gaji_terutang', 'listrik_terutang', 'beban_terutang', 'accrued',
+                    'masih_harus_dibayar', 'utang_gaji', 'utang_listrik', 'utang_beban'],
+  accrued_revenue: ['utang_pendapatan', 'pendapatan_belum_diterima', 'piutang_pendapatan',
+                    'accrued_revenue', 'pendapatan_terutang', 'jasa_belum_dibayar_klien',
+                    'invoice_belum_cair', 'tagihan_belum_dibayar', 'pendapatan_masih_harus_diterima'],
+  unearned:        ['pendapatan_diakui', 'jasa_selesai', 'unearned_earned',
+                    'pendapatan_dimuka_diakui', 'dp_selesai', 'panjar_selesai']
 };
 
 /**
@@ -88,12 +91,13 @@ function generateAdjustingEntries(transactions, chartOfAccounts, metadata) {
 /* ── UI Renderer ─────────────────────────────────────────────────────── */
 
 const ADJUSTING_TYPE_LABELS = {
-  depreciation: '📉 Penyusutan Aset Tetap',
-  supplies:     '📦 Pemakaian Perlengkapan',
-  prepaid:      '📅 Beban Dibayar di Muka',
-  accrued:      '⏳ Beban Masih Harus Dibayar',
-  unearned:     '💰 Pendapatan Diterima di Muka',
-  other:        '📝 Penyesuaian Lainnya'
+  depreciation:    '📉 Penyusutan Aset Tetap',
+  supplies:        '📦 Pemakaian Perlengkapan',
+  prepaid:         '📅 Beban Dibayar di Muka',
+  accrued:         '⏳ Beban Masih Harus Dibayar',
+  accrued_revenue: '💵 Pendapatan Masih Harus Diterima',
+  unearned:        '💰 Pendapatan Diterima di Muka',
+  other:           '📝 Penyesuaian Lainnya'
 };
 
 function renderAdjustingEntries(report, elements, formatCurrency) {
@@ -161,7 +165,8 @@ function pdfAdjustingEntries(doc, data, y, helpers) {
     y = checkNewPage(doc, y, cols, widths, tableHeader);
     const typeLabel = {
       depreciation: 'Penyusutan', supplies: 'Perlengkapan',
-      prepaid: 'Prepaid', accrued: 'Accrued', unearned: 'Unearned', other: 'Lainnya'
+      prepaid: 'Prepaid', accrued: 'Accrued Beban',
+      accrued_revenue: 'Accrued Rev', unearned: 'Unearned', other: 'Lainnya'
     }[e.adjustingType] || e.adjustingType;
 
     const row = [

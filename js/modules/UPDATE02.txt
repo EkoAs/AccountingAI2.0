@@ -78,7 +78,74 @@ Logika JS: Modal Akhir = Modal Awal + Laba - Prive.3. Laporan Posisi Keuangan / 
 Sumber Data: Akun Aset (1xxx), Liabilitas (2xxx), dan Modal Akhir (dari Laporan 2).Aturan Penulisan (Bentuk Skontro/T-Account):Sisi Kiri (Aset): Kas, Piutang, Perlengkapan, Peralatan, dan Akumulasi Penyusutan (1810) sebagai pengurang peralatan.
 Sisi Kanan (Liabilitas & Ekuitas): Utang Dagang, Utang Gaji, dan Modal Akhir.Syarat Mutlak: Total Aset WAJIB SAMA dengan Total Liabilitas + Ekuitas.
 
+==============================================================================================
 
+Jurnal Penutup
+
+
+1. Empat Tahap Penutupan (Wajib)
+Logika program kamu harus mengeksekusi empat urutan ini secara presisi. Jika satu terlewat, Neraca Saldo Setelah Penutupan tidak akan balance.
+
+A. Menutup Akun Pendapatan
+Semua saldo akun kepala 4xxx (Pendapatan Jasa, Pendapatan Lain-lain) yang tadinya di posisi Kredit, harus di-Debit-kan sebesar jumlah saldonya.
+
+Aturan: Debit Pendapatan, Kredit Ikhtisar Laba Rugi.
+
+Tujuan: Membuat saldo pendapatan menjadi 0.
+
+B. Menutup Akun Beban
+Semua akun kepala 5xxx (Beban Gaji, Beban Listrik, Beban Perlengkapan, dll) yang tadinya di posisi Debit, harus di-Kredit-kan sebesar jumlah saldonya.
+
+Aturan: Debit Ikhtisar Laba Rugi, Kredit Semua Akun Beban (Rinci satu per satu).
+
+Tujuan: Membuat semua saldo beban menjadi 0.
+
+C. Menutup Ikhtisar Laba Rugi
+Selisih antara pendapatan dan beban (Laba atau Rugi) dipindahkan ke Modal.
+
+Jika Laba: Debit Ikhtisar Laba Rugi, Kredit Modal (3xxx).
+
+Jika Rugi: Debit Modal (3xxx), Kredit Ikhtisar Laba Rugi.
+
+Tujuan: Memperbarui saldo Modal di Buku Besar agar sesuai dengan Laporan Perubahan Ekuitas.
+
+D. Menutup Akun Prive (Drawing)
+Jika ada pengambilan pribadi (Prive), akun ini harus ditutup langsung ke Modal.
+
+Aturan: Debit Modal (3xxx), Kredit Prive (3xxx).
+
+Tujuan: Mengurangi Modal secara permanen dan mengenolkan akun Prive.
+
+2. Syarat Mutlak Sistem (Logika Program)
+Agar JurnalAI Asif tetap "buas" dan akurat, file closing.js kamu harus memenuhi syarat berikut:
+
+Hanya Akun Nominal: Sistem DILARANG menutup akun Riil (Kepala 1, 2, dan 3 kecuali Prive). Kas, Piutang, Utang, dan Modal tetap dibawa ke periode berikutnya.
+
+Update Buku Besar Otomatis: Setelah jurnal penutup dibuat, sistem harus otomatis melakukan posting terakhir ke Buku Besar (Mode 2) sehingga kolom "Saldo Akhir" untuk Pendapatan dan Beban menunjukkan angka 0.
+
+Pencegahan Input: Setelah Mode 8 dieksekusi, sistem harus mengunci (Lock) periode tersebut. Tidak boleh ada input transaksi baru di bulan Januari setelah jurnal penutup dibuat.
+
+3. Implementasi "Input Mentah" ke Mode 8
+Di JurnalAI, Asif tidak perlu mengetik jurnal ini. Cukup satu fungsi otomatis:
+
+Logika Sistem:
+
+Cari semua akun dengan code.startsWith('4') dan code.startsWith('5').
+
+Hitung total saldo masing-masing.
+
+Generate objek JSON transaksi baru dengan keterangan "Jurnal Penutup".
+
+Masukkan ke dalam database utama.
+
+4. Hasil Akhir: Neraca Saldo Setelah Penutupan
+Setelah Mode 8 selesai, sistem akan menampilkan laporan terakhir yang hanya berisi:
+
+Aset (Kas, Piutang, dll)
+
+Liabilitas (Utang)
+
+Ekuitas (Modal yang sudah diperbarui)
 
 
 

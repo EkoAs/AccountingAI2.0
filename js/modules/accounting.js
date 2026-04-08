@@ -493,7 +493,17 @@ class AccountingCalculator {
         reasoning: 'Beban terutang: Beban Lain-lain bertambah (Debit), Beban Yang Masih Harus Dibayar (Liabilitas) bertambah (Kredit).',
         confidence: 0.90
       },
-      // E. Pendapatan diterima dimuka diakui → Debit Pendapatan Diterima Dimuka, Kredit Pendapatan
+      // F. Pendapatan masih harus diterima (Accrued Revenue) → Debit Piutang Pendapatan, Kredit Pendapatan
+      // Terjadi saat jasa sudah selesai tapi uang belum diterima (invoice belum cair)
+      // Kata kunci: utang_pendapatan, pendapatan_belum_diterima, piutang_pendapatan, accrued_revenue
+      {
+        keywords: ['utang_pendapatan', 'pendapatan_belum_diterima', 'piutang_pendapatan',
+                   'accrued_revenue', 'pendapatan_terutang', 'jasa_belum_dibayar_klien',
+                   'invoice_belum_cair', 'tagihan_belum_dibayar', 'pendapatan_masih_harus_diterima'],
+        debit: '1650', credit: '4000',
+        reasoning: 'Pendapatan masih harus diterima: Piutang Pendapatan (Aset) bertambah (Debit), Pendapatan bertambah (Kredit). Jasa sudah selesai tapi uang belum diterima.',
+        confidence: 0.97
+      },
       {
         keywords: ['pendapatan_diakui', 'jasa_selesai', 'dp_selesai', 'panjar_selesai',
                    'unearned_earned', 'pendapatan_dimuka_diakui'],

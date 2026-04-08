@@ -205,6 +205,7 @@
                                 <option value="adjusting-entries">Jurnal Penyesuaian</option>
                                 <option value="adjusted-trial-balance">Neraca Saldo Disesuaikan</option>
                                 <option value="financial-statements">Laporan Keuangan</option>
+                                <option value="closing-journal">Jurnal Penutup</option>
                             </select>
                         </div>
                     </div>
@@ -212,11 +213,11 @@
                     <!-- Report Summary -->
                     <div class="report-summary">
                         <div class="summary-item">
-                            <label>Total Debits:</label>
+                            <label id="labelTotalDebits">Total Debits:</label>
                             <span id="totalDebits" class="amount">0</span>
                         </div>
                         <div class="summary-item">
-                            <label>Total Credits:</label>
+                            <label id="labelTotalCredits">Total Credits:</label>
                             <span id="totalCredits" class="amount">0</span>
                         </div>
                         <div class="summary-item">
@@ -245,6 +246,9 @@
                         </button>
                         <button class="btn-secondary" id="exportDataBtn">
                             ⬇ Export Data
+                        </button>
+                        <button class="btn-warning" id="closingJournalBtn" style="display:none">
+                            🔒 Eksekusi Jurnal Penutup
                         </button>
                     </div>
                 </div><!-- end display-panel -->
@@ -311,6 +315,7 @@
     <script src="js/modules/reports/adjusting-entries.js"></script>
     <script src="js/modules/reports/adjusted-trial-balance.js"></script>
     <script src="js/modules/reports/financial-statements.js"></script>
+    <script src="js/modules/reports/closing-journal.js"></script>
     <!-- Dispatcher Modules -->
     <script src="js/modules/report-generator.js"></script>
     <script src="js/modules/pdf-generator.js"></script>

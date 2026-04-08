@@ -2,6 +2,12 @@
  * Financial Statements (Laporan Keuangan Lengkap) — Mode 7
  * Terdiri dari 3 laporan: Laba Rugi + Perubahan Ekuitas + Neraca
  * Sumber data: semua transaksi (termasuk penyesuaian)
+ *
+ * ══════════════════════════════════════════════════════════════════
+ * HUKUM NERACA (WAJIB TERPENUHI):
+ *   Total Aset = Total Liabilitas + Modal Akhir
+ *   Modal Akhir = Modal Awal + Laba Bersih - Prive
+ * ══════════════════════════════════════════════════════════════════
  */
 
 /* ── Data Generator ──────────────────────────────────────────────────── */
@@ -11,12 +17,12 @@ function generateFinancialStatements(transactions, chartOfAccounts, metadata) {
   const chartMap = {};
   chartOfAccounts.forEach(a => { chartMap[a.code] = a; });
 
-  // Helper: ambil saldo positif akun
-  const bal = (code) => Math.abs(balances[code] || 0);
-
-  // ── 1. LAPORAN LABA RUGI ─────────────────────────────────────────────
-  const revenues = [];       // Pendapatan operasional
-  const otherRevenues = [];  // Pendapatan lain-lain (4900)
+  // ══════════════════════════════════════════════════════════════════
+  // BAGIAN 1: LAPORAN LABA RUGI
+  // Sumber: akun 4xxx (Pendapatan) dan 5xxx (Beban/HPP)
+  // ══════════════════════════════════════════════════════════════════
+  const revenues = [];
+  const otherRevenues = [];
   const expenses = [];
   const hpp = [];
 
@@ -42,36 +48,41 @@ function generateFinancialStatements(transactions, chartOfAccounts, metadata) {
     }
   });
 
-  const grossRevenue   = revenues.filter(r => !r.isDeduction).reduce((s, r) => s + r.amount, 0);
-  const revenueDeduct  = revenues.filter(r => r.isDeduction).reduce((s, r) => s + r.amount, 0);
-  const netRevenue     = grossRevenue - revenueDeduct;
-  const totalOtherRev  = otherRevenues.reduce((s, r) => s + r.amount, 0);
+  const grossRevenue  = revenues.filter(r => !r.isDeduction).reduce((s, r) => s + r.amount, 0);
+  const revenueDeduct = revenues.filter(r => r.isDeduction).reduce((s, r) => s + r.amount, 0);
+  const netRevenue    = grossRevenue - revenueDeduct;
+  const totalOtherRev = otherRevenues.reduce((s, r) => s + r.amount, 0);
+  const hppGross      = hpp.filter(h => !h.isDeduction).reduce((s, h) => s + h.amount, 0);
+  const hppDeduct     = hpp.filter(h => h.isDeduction).reduce((s, h) => s + h.amount, 0);
+  const netHpp        = hppGross - hppDeduct;
+  const grossProfit   = netRevenue - netHpp;
+  const totalExpenses = expenses.reduce((s, e) => s + e.amount, 0);
+  const netIncome     = grossProfit - totalExpenses + totalOtherRev;
 
-  const hppGross   = hpp.filter(h => !h.isDeduction).reduce((s, h) => s + h.amount, 0);
-  const hppDeduct  = hpp.filter(h => h.isDeduction).reduce((s, h) => s + h.amount, 0);
-  const netHpp     = hppGross - hppDeduct;
-
-  const grossProfit    = netRevenue - netHpp;
-  const totalExpenses  = expenses.reduce((s, e) => s + e.amount, 0);
-  const netIncome      = grossProfit - totalExpenses + totalOtherRev;
-
-  // ── 2. LAPORAN PERUBAHAN EKUITAS ─────────────────────────────────────
-  // Modal (3000) adalah credit-normal: balances['3000'] sudah positif = kredit
-  // Prive (3100) adalah debit-normal: balances['3100'] sudah positif = debit
+  // ══════════════════════════════════════════════════════════════════
+  // BAGIAN 2: LAPORAN PERUBAHAN EKUITAS
+  // Modal Akhir = Modal Awal (3000) + Laba Bersih - Prive (3100)
+  // ⚠️ calculateAccountBalances untuk 3000 sudah mencakup semua setoran
+  //    modal sepanjang periode — itulah "Modal Awal" sebelum laba/rugi
+  // ══════════════════════════════════════════════════════════════════
   const capitalBegin = Math.max(0, balances['3000'] || 0);
   const prive        = Math.max(0, balances['3100'] || 0);
   const capitalEnd   = capitalBegin + netIncome - prive;
 
-  // ── 3. NERACA ────────────────────────────────────────────────────────
+  // ══════════════════════════════════════════════════════════════════
+  // BAGIAN 3: NERACA (LAPORAN POSISI KEUANGAN)
+  // Hukum: Total Aset = Total Liabilitas + Modal Akhir
+  // ⚠️ Ekuitas di neraca HARUS pakai capitalEnd (bukan saldo 3000 mentah)
+  //    karena laba/rugi belum diposting ke Modal sebelum jurnal penutup
+  // ══════════════════════════════════════════════════════════════════
   const assets      = [];
   const liabilities = [];
 
   chartOfAccounts.forEach(acc => {
     const b = balances[acc.code] || 0;
-    if (b === 0) return; // skip semua akun dengan saldo 0, termasuk 1810
+    if (b === 0) return;
 
     if (acc.type === 'Asset') {
-      // Akumulasi Penyusutan (1810) adalah pengurang Peralatan — hanya tampil jika ada saldo
       if (acc.code === '1810') {
         assets.push({ code: acc.code, name: acc.name, amount: Math.abs(b), isContra: true });
       } else {
@@ -84,8 +95,8 @@ function generateFinancialStatements(transactions, chartOfAccounts, metadata) {
 
   const totalAssets      = assets.reduce((s, a) => a.isContra ? s - a.amount : s + a.amount, 0);
   const totalLiabilities = liabilities.reduce((s, l) => s + l.amount, 0);
-  const totalEquity      = capitalEnd;
-  const totalLiabEquity  = totalLiabilities + totalEquity;
+  // Modal Akhir sudah memperhitungkan laba/rugi dan prive → neraca balance
+  const totalLiabEquity  = totalLiabilities + capitalEnd;
   const isBalanced       = Math.abs(totalAssets - totalLiabEquity) < 0.01;
 
   return {
@@ -105,12 +116,19 @@ function generateFinancialStatements(transactions, chartOfAccounts, metadata) {
     balanceSheet: {
       assets, totalAssets,
       liabilities, totalLiabilities,
-      capitalEnd, totalEquity,
+      capitalEnd, totalEquity: capitalEnd,
       totalLiabEquity, isBalanced
     },
     summary: {
       netIncome, isProfit: netIncome >= 0,
-      totalAssets, isBalanced
+      totalAssets, isBalanced,
+      // Header panel: tampilkan Total Aset vs Total L+E sebagai verifikasi neraca
+      // Label "Total Debits/Credits" diganti konteks neraca agar tidak membingungkan
+      totalDebits: totalAssets,
+      totalCredits: totalLiabEquity,
+      balanced: isBalanced,
+      labelDebits: 'Total Aset',
+      labelCredits: 'Total L + E'
     }
   };
 }
@@ -225,124 +243,166 @@ function renderFinancialStatements(report, elements, formatCurrency) {
 /* ── PDF Renderer ────────────────────────────────────────────────────── */
 
 function pdfFinancialStatements(doc, data, y, helpers) {
-  const { tableHeader, tableRow, totalRow, checkNewPage, fmt, ml, pw, mr, ph, mb, mt } = helpers;
+  const { fmt, ml, pw, mr, ph, mb, mt } = helpers;
   const is = data.incomeStatement;
   const es = data.equityStatement;
   const bs = data.balanceSheet;
   const usableW = pw - ml - mr;
+  const RH = 7;   // row height — cukup untuk teks + padding atas/bawah
+  const colW = [usableW * 0.65, usableW * 0.35]; // [label, amount]
+
+  // ── Primitif tabel berkotak ─────────────────────────────────────────
 
   const _sectionHeader = (title, yy) => {
-    doc.setFillColor(50, 50, 50);
-    doc.rect(ml, yy, usableW, 7, 'F');
-    doc.setFontSize(9);
-    doc.setFont('times', 'bold');
-    doc.setTextColor(220, 220, 220);
-    doc.text(title, ml + 3, yy + 5);
+    if (yy > ph - mb - 12) { doc.addPage(); yy = mt; }
+    doc.setFillColor(40, 40, 40);
+    doc.rect(ml, yy, usableW, 8, 'F');
+    doc.setFontSize(9); doc.setFont('times', 'bold');
+    doc.setTextColor(230, 230, 230);
+    doc.text(title, ml + 4, yy + 5.5);
     doc.setTextColor(20, 20, 20);
-    return yy + 9;
+    return yy + 10;
   };
 
   const _subHeader = (title, yy) => {
-    doc.setFillColor(210, 210, 210);
-    doc.rect(ml, yy, usableW, 6, 'F');
-    doc.setFontSize(8.5);
-    doc.setFont('times', 'bold');
-    doc.setTextColor(20, 20, 20);
-    doc.text(title, ml + 3, yy + 4.5);
-    return yy + 7;
-  };
-
-  const _row = (label, amount, yy, isDeduction = false, isBold = false) => {
     if (yy > ph - mb - 10) { doc.addPage(); yy = mt; }
-    doc.setFontSize(8);
-    doc.setFont('times', isBold ? 'bold' : 'normal');
+    doc.setFillColor(200, 200, 200);
+    doc.setDrawColor(160, 160, 160);
+    doc.setLineWidth(0.2);
+    doc.rect(ml, yy, usableW, RH, 'FD');
+    doc.setFontSize(8.5); doc.setFont('times', 'bold');
     doc.setTextColor(20, 20, 20);
-    doc.text(label, ml + 5, yy);
-    if (amount !== null) {
+    doc.text(title, ml + 4, yy + RH * 0.68);
+    return yy + RH;
+  };
+
+  // Baris data dengan kotak border
+  const _row = (label, amount, yy, isDeduction = false, isBold = false, isTotal = false) => {
+    if (yy > ph - mb - 10) { doc.addPage(); yy = mt; }
+    const fill = isTotal ? [230, 230, 230] : [255, 255, 255];
+    doc.setFillColor(...fill);
+    doc.setDrawColor(180, 180, 180);
+    doc.setLineWidth(0.2);
+    // Kotak label
+    doc.rect(ml, yy, colW[0], RH, 'FD');
+    // Kotak amount
+    doc.rect(ml + colW[0], yy, colW[1], RH, 'FD');
+
+    doc.setFontSize(8.5);
+    doc.setFont('times', isBold || isTotal ? 'bold' : 'normal');
+    doc.setTextColor(20, 20, 20);
+    // Indent label
+    const indent = isTotal ? ml + 4 : ml + 8;
+    doc.text(label, indent, yy + RH * 0.68);
+    // Amount rata kanan
+    if (amount !== null && amount !== undefined) {
       const amtStr = isDeduction ? `(${fmt(amount)})` : fmt(amount);
-      doc.text(amtStr, pw - mr - 2, yy, { align: 'right' });
+      doc.text(amtStr, ml + colW[0] + colW[1] - 2, yy + RH * 0.68, { align: 'right' });
     }
-    return yy + 6;
+    return yy + RH;
   };
 
-  const _divider = (yy) => {
-    doc.setDrawColor(150, 150, 150);
-    doc.setLineWidth(0.3);
-    doc.line(ml, yy, pw - mr, yy);
-    return yy + 3;
-  };
+  const _spacer = (yy, h = 4) => yy + h;
 
-  // ── Laba Rugi ──────────────────────────────────────────────────────
+  // ══════════════════════════════════════════════════════════════════
+  // LAPORAN LABA RUGI
+  // ══════════════════════════════════════════════════════════════════
   y = _sectionHeader('LAPORAN LABA RUGI', y);
-  y = _subHeader('PENDAPATAN', y);
-  is.revenues.filter(r => !r.isDeduction).forEach(r => { y = _row(r.name, r.amount, y); });
-  if (is.revenueDeduct > 0) {
-    is.revenues.filter(r => r.isDeduction).forEach(r => { y = _row(`(−) ${r.name}`, r.amount, y, true); });
-    y = _row('Penjualan Bersih', is.netRevenue, y, false, true);
-    y = _divider(y);
+
+  if (is.revenues.filter(r => !r.isDeduction).length > 0) {
+    y = _subHeader('PENDAPATAN', y);
+    is.revenues.filter(r => !r.isDeduction).forEach(r => { y = _row(r.name, r.amount, y); });
+    if (is.revenueDeduct > 0) {
+      is.revenues.filter(r => r.isDeduction).forEach(r => { y = _row(`(−) ${r.name}`, r.amount, y, true); });
+      y = _row('Penjualan Bersih', is.netRevenue, y, false, true, true);
+    }
+  } else {
+    y = _subHeader('PENDAPATAN', y);
+    y = _row('(tidak ada pendapatan)', null, y);
   }
+
   if (is.hpp.length > 0) {
+    y = _spacer(y, 2);
     y = _subHeader('HARGA POKOK PENJUALAN', y);
     is.hpp.forEach(h => { y = _row(h.isDeduction ? `(−) ${h.name}` : h.name, h.amount, y, h.isDeduction); });
-    y = _row('HPP Bersih', is.netHpp, y, true, true);
-    y = _row('Laba Kotor', is.grossProfit, y, false, true);
-    y = _divider(y);
+    y = _row('HPP Bersih', is.netHpp, y, true, true, true);
+    y = _row('Laba Kotor', is.grossProfit, y, false, true, true);
   }
+
+  y = _spacer(y, 2);
   y = _subHeader('BEBAN OPERASIONAL', y);
-  is.expenses.forEach(e => { y = _row(e.name, e.amount, y); });
-  y = _row('Total Beban', is.totalExpenses, y, true, true);
-  y = _divider(y);
+  if (is.expenses.length === 0) {
+    y = _row('(tidak ada beban)', null, y);
+  } else {
+    is.expenses.forEach(e => { y = _row(e.name, e.amount, y); });
+  }
+  y = _row('Total Beban', is.totalExpenses, y, true, true, true);
 
   if (is.otherRevenues && is.otherRevenues.length > 0) {
+    y = _spacer(y, 2);
     y = _subHeader('PENDAPATAN LAIN-LAIN', y);
     is.otherRevenues.forEach(r => { y = _row(r.name, r.amount, y); });
-    y = _row('Total Pendapatan Lain', is.totalOtherRev, y, false, true);
-    y = _divider(y);
+    y = _row('Total Pendapatan Lain', is.totalOtherRev, y, false, true, true);
   }
 
+  // Baris laba/rugi bersih — warna khusus
+  y = _spacer(y, 2);
   const profitLabel = is.isProfit ? 'LABA BERSIH' : 'RUGI BERSIH';
-  doc.setFontSize(9);
-  doc.setFont('times', 'bold');
-  doc.setTextColor(is.isProfit ? 22 : 220, is.isProfit ? 163 : 38, is.isProfit ? 74 : 38);
-  doc.text(profitLabel, ml + 5, y);
-  doc.text(fmt(Math.abs(is.netIncome)), pw - mr - 2, y, { align: 'right' });
+  const pColor = is.isProfit ? [22, 163, 74] : [220, 38, 38];
+  doc.setFillColor(240, 240, 240);
+  doc.setDrawColor(120, 120, 120);
+  doc.setLineWidth(0.4);
+  doc.rect(ml, y, colW[0], RH + 1, 'FD');
+  doc.rect(ml + colW[0], y, colW[1], RH + 1, 'FD');
+  doc.setFontSize(9); doc.setFont('times', 'bold');
+  doc.setTextColor(...pColor);
+  doc.text(profitLabel, ml + 4, y + (RH + 1) * 0.68);
+  doc.text(fmt(Math.abs(is.netIncome)), ml + colW[0] + colW[1] - 2, y + (RH + 1) * 0.68, { align: 'right' });
   doc.setTextColor(20, 20, 20);
-  y += 10;
+  y += RH + 1 + 8;
 
-  // ── Perubahan Ekuitas ──────────────────────────────────────────────
+  // ══════════════════════════════════════════════════════════════════
+  // LAPORAN PERUBAHAN EKUITAS
+  // ══════════════════════════════════════════════════════════════════
   if (y > ph - mb - 50) { doc.addPage(); y = mt; }
   y = _sectionHeader('LAPORAN PERUBAHAN EKUITAS', y);
   y = _row('Modal Awal', es.capitalBegin, y);
-  y = _row(is.isProfit ? '(+) Laba Bersih' : '(+) Rugi Bersih', Math.abs(es.netIncome), y, !is.isProfit);
+  y = _row(is.isProfit ? '(+) Laba Bersih' : '(−) Rugi Bersih', Math.abs(es.netIncome), y, !is.isProfit);
   if (es.prive > 0) y = _row('(−) Prive', es.prive, y, true);
-  y = _divider(y);
-  y = _row('Modal Akhir', es.capitalEnd, y, false, true);
+  y = _row('Modal Akhir', es.capitalEnd, y, false, true, true);
   y += 8;
 
-  // ── Neraca ─────────────────────────────────────────────────────────
+  // ══════════════════════════════════════════════════════════════════
+  // NERACA (LAPORAN POSISI KEUANGAN)
+  // ══════════════════════════════════════════════════════════════════
   if (y > ph - mb - 60) { doc.addPage(); y = mt; }
   y = _sectionHeader('NERACA (LAPORAN POSISI KEUANGAN)', y);
+
   y = _subHeader('ASET', y);
   bs.assets.filter(a => !a.isContra).forEach(a => { y = _row(a.name, a.amount, y); });
   bs.assets.filter(a => a.isContra).forEach(a => { y = _row(`(−) ${a.name}`, a.amount, y, true); });
-  y = _row('Total Aset', bs.totalAssets, y, false, true);
-  y = _divider(y);
+  y = _row('Total Aset', bs.totalAssets, y, false, true, true);
 
+  y = _spacer(y, 3);
   y = _subHeader('LIABILITAS', y);
-  bs.liabilities.forEach(l => { y = _row(l.name, l.amount, y); });
-  y = _row('Total Liabilitas', bs.totalLiabilities, y, false, true);
+  if (bs.liabilities.length === 0) {
+    y = _row('(tidak ada liabilitas)', null, y);
+  } else {
+    bs.liabilities.forEach(l => { y = _row(l.name, l.amount, y); });
+  }
+  y = _row('Total Liabilitas', bs.totalLiabilities, y, false, true, true);
 
+  y = _spacer(y, 3);
   y = _subHeader('EKUITAS', y);
   y = _row('Modal Akhir', bs.capitalEnd, y);
-  y = _divider(y);
-  y = _row('Total Liabilitas + Ekuitas', bs.totalLiabEquity, y, false, true);
+  y = _row('Total Liabilitas + Ekuitas', bs.totalLiabEquity, y, false, true, true);
 
-  // Balance check
-  y += 3;
-  doc.setFontSize(8);
-  doc.setFont('times', 'bold');
+  // Status neraca
+  y += 4;
+  doc.setFontSize(8.5); doc.setFont('times', 'bold');
   doc.setTextColor(bs.isBalanced ? 22 : 220, bs.isBalanced ? 163 : 38, bs.isBalanced ? 74 : 38);
-  doc.text(bs.isBalanced ? '✓ Neraca Seimbang (A = L + E)' : '✗ Neraca Tidak Seimbang', ml + 5, y);
+  doc.text(bs.isBalanced ? '✓ Neraca Seimbang  (A = L + E)' : '✗ Neraca Tidak Seimbang', ml + 4, y);
+  doc.setTextColor(20, 20, 20);
 
   return y + 8;
 }

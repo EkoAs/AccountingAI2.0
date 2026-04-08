@@ -1,157 +1,249 @@
-# Accounting Ledger System - By Eko Asif
+# 📒 Accounting Ledger System — By Eko Asif
 
-Sistem buku besar akuntansi otomatis berbasis web dengan klasifikasi AI (Gemini). Masukkan transaksi dalam format natural language, sistem otomatis mengklasifikasi ke akun yang tepat sesuai standar PSAK, lalu menampilkan laporan akuntansi real-time.
+> Sistem buku besar akuntansi otomatis berbasis web dengan klasifikasi AI (Gemini).  
+> Input transaksi dalam format natural language → AI klasifikasi otomatis → laporan akuntansi real-time.
 
-Mendukung **perusahaan jasa** maupun **perusahaan dagang**.
+Mendukung **perusahaan jasa** maupun **perusahaan dagang** sesuai standar **PSAK Indonesia**.
 
-## Fitur Utama
+---
 
-- Input Natural Language — Format: `nama_item harga_satuan kuantitas tanggal`
-- AI Double-Entry — Setiap transaksi otomatis menghasilkan 2 baris jurnal (Debit + Kredit)
-- 4 Jenis Laporan — General Journal, General Ledger, Trial Balance, Reversing Journal
-- Standar PSAK — Saldo normal per kelompok akun, persamaan akuntansi A = L + E
-- PDF Export — Download laporan A4, font Times New Roman, siap cetak
-- Undo/Redo — Batalkan atau ulangi transaksi
-- Responsive — Optimal di HP, tablet, dan laptop
+## ✨ Fitur Utama
 
-## Quick Start
+| Fitur | Keterangan |
+|-------|------------|
+| 🤖 AI Double-Entry | Setiap input otomatis menghasilkan 2 baris jurnal (Debit + Kredit) via Gemini AI |
+| 📝 Natural Language Input | Format: `nama_item harga_satuan kuantitas tanggal` |
+| 📊 8 Mode Laporan | Jurnal Umum, Buku Besar, Neraca Saldo, Jurnal Pembalik, Jurnal Penyesuaian, Neraca Saldo Disesuaikan, Laporan Keuangan, Jurnal Penutup |
+| 📄 PDF Export | Laporan A4, font Times New Roman, siap cetak |
+| ⚖️ Auto Balance Check | Validasi persamaan akuntansi A = L + E secara real-time |
+| ↩️ Undo / Redo | Batalkan atau ulangi transaksi kapan saja |
+| 🔒 Period Lock | Jurnal penutup mengunci periode agar tidak ada input baru |
+| 📱 Responsive | Optimal di HP, tablet, dan laptop |
 
-1. Buka `index.html` di browser (atau gunakan Live Server di `127.0.0.1:5500`)
-2. Isi nama perusahaan, judul laporan, nama penyusun
-3. Klik **Mulai Sekarang**
-4. Masukkan transaksi di input field, tekan Enter
-5. Review klasifikasi AI → klik **Confirm**
+---
+
+## 🚀 Quick Start
+
+```bash
+# 1. Clone atau download repo
+# 2. Buka index.html di browser (atau Live Server)
+http://127.0.0.1:5500/index.html
+```
+
+**Langkah penggunaan:**
+1. Isi nama perusahaan, judul laporan, nama penyusun → klik **Mulai Sekarang**
+2. Ketik transaksi di input field → tekan **Enter**
+3. Review klasifikasi AI → klik **Confirm**
+4. Pilih jenis laporan dari dropdown → klik **Generate PDF**
 
 ### Setup Gemini API Key (Opsional)
 ```javascript
-// Di browser console:
-localStorage.setItem('gemini_api_key', 'your_api_key_here');
+// Di browser console (F12):
+localStorage.setItem('gemini_api_key', 'YOUR_API_KEY_HERE');
 ```
-Tanpa API key, sistem menggunakan klasifikasi lokal berbasis aturan PSAK.
+> Tanpa API key, sistem menggunakan klasifikasi lokal berbasis aturan PSAK (fallback mode).
 
-## Struktur Proyek
+---
+
+## 📋 8 Mode Laporan
+
+```
+Mode 1 — Jurnal Umum (General Journal)
+         Catatan kronologis semua transaksi double-entry
+
+Mode 2 — Buku Besar (General Ledger)
+         Detail per akun dengan running balance
+
+Mode 3 — Neraca Saldo (Trial Balance)
+         Verifikasi Total Debit = Total Kredit
+
+Mode 4 — Jurnal Pembalik (Reversing Journal)
+         Pembalik otomatis akun akrual (2200, 1650, 1300, 1400)
+
+Mode 5 — Jurnal Penyesuaian (Adjusting Entries)
+          Penyusutan, pemakaian perlengkapan, prepaid, accrued, unearned
+
+Mode 6 — Neraca Saldo Disesuaikan (Adjusted Trial Balance)
+         Saldo setelah jurnal penyesuaian
+
+Mode 7 — Laporan Keuangan (Financial Statements)
+         Laba Rugi + Perubahan Ekuitas + Neraca (A = L + E)
+
+Mode 8 — Jurnal Penutup (Closing Journal)
+         Tutup akun nominal (4xxx, 5xxx) → Modal, kunci periode
+```
+
+---
+
+## 📁 Struktur Proyek
 
 ```
 accounting-ledger-system/
-├── index.html
+├── index.html                        # Entry point aplikasi
 ├── css/
-│   ├── theme.css          # Variabel warna & tipografi
-│   ├── styles.css         # Layout & komponen
-│   └── responsive.css     # Breakpoint mobile/tablet/desktop
+│   ├── theme.css                     # Variabel warna & tipografi
+│   ├── styles.css                    # Layout & komponen UI
+│   └── responsive.css                # Breakpoint mobile/tablet/desktop
 ├── js/
 │   ├── modules/
-│   │   ├── storage.js     # localStorage management
-│   │   ├── auth.js        # Chart of accounts & profil
-│   │   ├── transaction.js # Parse & simpan transaksi
-│   │   ├── accounting.js  # Kalkulasi double-entry & PSAK
-│   │   ├── ai-classifier.js # Gemini AI + fallback lokal
-│   │   ├── report-generator.js # Generate 4 jenis laporan
-│   │   └── pdf-generator.js    # Export PDF
-│   ├── app.js             # Controller utama
-│   ├── ui.js              # UI manager
-│   └── main.js            # Event handlers
-└── README.md
+│   │   ├── storage.js                # localStorage management
+│   │   ├── auth.js                   # Chart of accounts & profil user
+│   │   ├── transaction.js            # Parse & simpan transaksi
+│   │   ├── accounting.js             # Kalkulasi double-entry & pola PSAK
+│   │   ├── ai-classifier.js          # Gemini AI + fallback lokal
+│   │   ├── auto-balancer.js          # Saran offset transaksi
+│   │   ├── report-generator.js       # Dispatcher ke per-mode report
+│   │   ├── pdf-generator.js          # Export PDF (dispatcher + primitives)
+│   │   └── reports/
+│   │       ├── general-journal.js    # Mode 1
+│   │       ├── general-ledger.js     # Mode 2
+│   │       ├── trial-balance.js      # Mode 3
+│   │       ├── reversing-journal.js  # Mode 4
+│   │       ├── adjusting-entries.js  # Mode 5
+│   │       ├── adjusted-trial-balance.js  # Mode 6
+│   │       ├── financial-statements.js    # Mode 7
+│   │       └── closing-journal.js    # Mode 8
+│   ├── app.js                        # Controller utama & state management
+│   ├── ui.js                         # UI manager & DOM manipulation
+│   └── main.js                       # Event handlers
+└── PANDUAN USER/
+    └── BUKU_PANDUAN_LENGKAP.md       # Dokumentasi lengkap
 ```
 
-## Aturan Saldo Normal (PSAK)
+---
 
-| Kelompok | Kode | Bertambah | Berkurang | Saldo Normal |
-|----------|------|-----------|-----------|--------------|
-| Aset | 1xxx | Debit | Kredit | Debit |
-| Liabilitas | 2xxx | Kredit | Debit | Kredit |
-| Ekuitas | 3xxx | Kredit | Debit | Kredit |
-| Pendapatan | 4xxx | Kredit | Debit | Kredit |
-| Beban/HPP | 5xxx | Debit | Kredit | Debit |
+## 📊 Chart of Accounts (PSAK Indonesia)
 
-## Pola AI Classifier — Perusahaan Dagang
+### Aset (1xxx)
+| Kode | Nama | Kategori |
+|------|------|----------|
+| 1000 | Kas | Aset Lancar |
+| 1010 | Bank | Aset Lancar |
+| 1100 | Piutang Dagang | Aset Lancar |
+| 1200 | Persediaan Barang Dagangan | Aset Lancar |
+| 1300 | Sewa Dibayar di Muka | Aset Lancar |
+| 1400 | Asuransi Dibayar di Muka | Aset Lancar |
+| 1500 | Perlengkapan | Aset Lancar |
+| 1600 | Beban Dibayar Dimuka | Aset Lancar |
+| 1650 | Piutang Pendapatan | Aset Lancar |
+| 1800 | Peralatan | Aset Tetap |
+| 1810 | Akumulasi Penyusutan Peralatan | Aset Tetap |
 
-| Kata Kunci Input | Debit | Kredit | Keterangan |
-|-----------------|-------|--------|------------|
-| `pembelian_kredit`, `syarat_kredit`, `n/30`, `2/15` | Pembelian (5010) | Utang Dagang (2000) | Beli barang dagangan kredit |
-| `pembelian_tunai`, `beli_tunai` | Pembelian (5010) | Kas (1000) | Beli barang dagangan tunai |
-| `retur_pembelian`, `retur_beli` | Utang Dagang (2000) | Retur Pembelian (5020) | Kembalikan barang ke supplier |
-| `potongan_pembelian` | Utang Dagang (2000) | Potongan Pembelian (5030) | Diskon dari supplier |
-| `beban_angkut_pembelian`, `ongkir_beli` | Beban Angkut Pembelian (5040) | Kas (1000) | Ongkos angkut masuk |
-| `penjualan_kredit`, `jual_kredit` | Piutang Dagang (1100) | Penjualan (4000) | Jual barang kredit |
-| `penjualan_tunai`, `jual_tunai` | Kas (1000) | Penjualan (4000) | Jual barang tunai |
-| `retur_penjualan`, `retur_jual` | Retur Penjualan (4100) | Piutang Dagang (1100) | Barang dikembalikan pembeli |
-| `potongan_penjualan`, `diskon_jual` | Potongan Penjualan (4200) | Piutang Dagang (1100) | Diskon ke pembeli |
-| `beban_angkut_penjualan`, `ongkir`, `kirim_barang` | Beban Angkut Penjualan (5750) | Kas (1000) | Ongkos kirim ke pembeli |
-| `penerimaan_piutang`, `terima_pelunasan` | Kas (1000) | Piutang Dagang (1100) | Terima pembayaran dari pembeli |
-| `bayar_utang_dagang`, `lunasi_utang` | Utang Dagang (2000) | Kas (1000) | Bayar ke supplier |
-| `beban_iklan`, `iklan`, `reklame` | Beban Iklan (5710) | Kas (1000) | Biaya iklan/promosi |
+### Liabilitas (2xxx) · Ekuitas (3xxx) · Pendapatan (4xxx) · Beban (5xxx)
+| Kode | Nama |
+|------|------|
+| 2000 | Utang Dagang |
+| 2100 | Utang Bank |
+| 2200 | Beban Yang Masih Harus Dibayar |
+| 2300 | Pendapatan Diterima Dimuka |
+| 3000 | Modal Pemilik |
+| 3100 | Prive |
+| 4000 | Penjualan / Pendapatan Jasa |
+| 5100 | Beban Gaji · 5200 Beban Sewa · 5300 Beban Listrik |
+| 5500 | Beban Penyusutan · 5710 Beban Iklan · 5750 Beban Angkut Penjualan |
 
-## Pola AI Classifier — Perusahaan Jasa & Umum
+---
 
-| Kata Kunci Input | Debit | Kredit | Keterangan |
-|-----------------|-------|--------|------------|
-| `modal`, `investor`, `setoran` | Kas (1000) | Modal Pemilik (3000) | Uang masuk dari pemilik/investor = Ekuitas |
-| `prive`, `penarikan` | Prive (3100) | Kas (1000) | Penarikan pemilik |
-| `pendapatan`, `jasa` | Kas (1000) | Penjualan (4000) | Pendapatan jasa tunai |
-| `piutang`, `jasa_kredit` | Piutang Dagang (1100) | Penjualan (4000) | Jasa belum dibayar klien |
-| `gaji`, `upah` | Beban Gaji (5100) | Kas (1000) | Bayar gaji tunai |
-| `sewa` | Beban Sewa (5200) | Kas (1000) | Bayar sewa tunai |
-| `listrik`, `air`, `wifi` | Beban Listrik (5300) | Kas (1000) | Bayar utilitas tunai |
-| `perlengkapan`, `atk`, `pulpen` | Beban Perlengkapan (5400) | Kas (1000) | Beli tunai |
-| `perlengkapan_belum_dibayar`, `atk_kredit` | Beban Perlengkapan (5400) | Utang Dagang (2000) | Belum dibayar = Utang, bukan Kas |
-| `peralatan_belum_dibayar` | Peralatan (1800) | Utang Dagang (2000) | Beli peralatan kredit |
-| `komputer`, `laptop`, `peralatan` | Peralatan (1800) | Kas (1000) | Beli peralatan tunai |
-| `pinjaman`, `loan` | Kas (1000) | Utang Bank (2100) | Pinjaman masuk |
+## ⌨️ Pola Input & Keyword AI
 
-> Catatan penting:
-> - `investor` / `modal` → Ekuitas (3000), BUKAN Beban. Uang dari investor menambah modal.
-> - `belum_dibayar` → Utang Dagang (2000), BUKAN Kas. Jika belum dibayar, kas tidak berkurang.
-> - Syarat kredit seperti `2/15, n/30` → pembelian kredit, bukan tunai.
-
-## Contoh Input — PT. Karya Usaha (Perusahaan Dagang)
-
+### Format Input
 ```
-modal_awal 50000000 1 2025-01-01
-pembelian_kredit 10000000 1 2025-01-05
-penjualan_kredit 15000000 1 2025-01-10
-penjualan_tunai 5000000 1 2025-01-12
-retur_penjualan 500000 1 2025-01-14
-beban_angkut_penjualan 200000 1 2025-01-15
-beban_iklan 300000 1 2025-01-20
-bayar_utang_dagang 10000000 1 2025-01-25
-penerimaan_piutang 14500000 1 2025-01-28
+nama_keyword  harga_satuan  kuantitas  YYYY-MM-DD
 ```
 
-## Contoh Input — Perusahaan Jasa
+### Perusahaan Dagang
+| Keyword | Debit | Kredit |
+|---------|-------|--------|
+| `pembelian_kredit`, `n/30`, `2/15` | Pembelian (5010) | Utang Dagang (2000) |
+| `pembelian_tunai` | Pembelian (5010) | Kas (1000) |
+| `penjualan_kredit` | Piutang Dagang (1100) | Penjualan (4000) |
+| `penjualan_tunai` | Kas (1000) | Penjualan (4000) |
+| `retur_penjualan` | Retur Penjualan (4100) | Piutang Dagang (1100) |
+| `penerimaan_piutang` | Kas (1000) | Piutang Dagang (1100) |
+| `bayar_utang_dagang` | Utang Dagang (2000) | Kas (1000) |
+
+### Perusahaan Jasa & Umum
+| Keyword | Debit | Kredit |
+|---------|-------|--------|
+| `modal_awal`, `investor` | Kas (1000) | Modal Pemilik (3000) |
+| `prive`, `penarikan` | Prive (3100) | Kas (1000) |
+| `gaji`, `upah` | Beban Gaji (5100) | Kas (1000) |
+| `sewa` | Beban Sewa (5200) | Kas (1000) |
+| `perlengkapan_belum_dibayar` | Perlengkapan (1500) | Utang Dagang (2000) |
+| `pinjaman`, `loan` | Kas (1000) | Utang Bank (2100) |
+
+### Jurnal Penyesuaian (Mode 5)
+| Keyword | Debit | Kredit |
+|---------|-------|--------|
+| `penyusutan`, `depresiasi` | Beban Penyusutan (5500) | Akum. Penyusutan (1810) |
+| `pemakaian_perlengkapan` | Beban Perlengkapan (5400) | Perlengkapan (1500) |
+| `utang_gaji`, `gaji_terutang` | Beban Gaji (5100) | Beban Masih Harus Dibayar (2200) |
+| `utang_pendapatan`, `pendapatan_belum_diterima` | Piutang Pendapatan (1650) | Penjualan (4000) |
+| `sewa_jatuh_tempo` | Beban Sewa (5200) | Sewa Dibayar di Muka (1300) |
+| `pendapatan_diakui`, `jasa_selesai` | Pendapatan Diterima Dimuka (2300) | Penjualan (4000) |
+
+---
+
+## 🔄 Alur Kerja Lengkap
 
 ```
-modal_awal 50000000 1 2025-01-01
-gaji 3000000 1 2025-01-05
-sewa 1500000 1 2025-01-05
-perlengkapan_belum_dibayar 500000 1 2025-01-10
-pendapatan_jasa 5000000 1 2025-01-15
-investor 10000000 1 2025-01-20
+Input Transaksi (natural language)
+        ↓
+Parse & Validasi Format
+        ↓
+Gemini AI Klasifikasi → Fallback lokal jika gagal
+        ↓
+Tampilkan: Akun Debit | Akun Kredit | Confidence
+        ↓
+User klik [Confirm]
+        ↓
+Simpan ke localStorage (double-entry)
+        ↓
+Update laporan real-time
+        ↓
+Generate PDF (A4, Times New Roman)
 ```
 
-## Responsive Design
+---
 
-- Desktop (≥1024px): Layout 2 kolom — input panel kiri (340px), laporan kanan
-- Tablet (768–1023px): Layout 1 kolom, stacked
-- Mobile (<768px): Layout 1 kolom, tombol full-width, tabel scroll horizontal
+## 🎨 Tema Visual
 
-## Tema
+| Elemen | Warna | Kode |
+|--------|-------|------|
+| Background | Abu-abu gelap | `#1c1c1c` |
+| Panel | Charcoal | `#2e2e2e` |
+| Teks | Silver | `#c0c0c0` |
+| Balance ✓ | Hijau | `#4ade80` |
+| Warning | Oranye | `#fb923c` |
+| Error | Merah | `#ef4444` |
 
-- Background: `#1c1c1c` (abu-abu gelap)
-- Panel: `#2e2e2e` (charcoal)
-- Silver: `#c0c0c0`
-- Success: `#4ade80` | Warning: `#fb923c` | Error: `#ef4444`
+---
 
-## Troubleshooting
+## 🛠️ Troubleshooting
 
 | Masalah | Solusi |
 |---------|--------|
-| Tombol Mulai tidak bisa diklik | Pastikan nama perusahaan diisi |
-| Transaksi tidak balance | Setiap input menghasilkan 2 baris otomatis — cek apakah ada transaksi lama dari sesi sebelumnya |
-| AI salah klasifikasi | Gunakan keyword spesifik seperti `pembelian_kredit`, `penjualan_tunai`, `perlengkapan_belum_dibayar` |
-| PDF tidak generate | Pastikan status "✓ Balanced" sebelum generate PDF. Buka browser console jika masih gagal |
-| Data hilang setelah update | Chart of accounts diperbarui — klik Reset All Data lalu input ulang transaksi |
-| Data hilang | Data tersimpan di localStorage browser — jangan clear browser data |
+| Tombol Mulai tidak aktif | Isi nama perusahaan terlebih dahulu |
+| AI salah klasifikasi | Gunakan keyword spesifik: `pembelian_kredit`, `utang_gaji`, `penyusutan` |
+| PDF tidak bisa di-generate | Mode Jurnal Umum & Neraca Saldo butuh status ✓ Balanced. Mode lain bisa langsung cetak. |
+| Data hilang setelah update | Klik **Reset All Data** lalu input ulang transaksi |
+| Jurnal pembalik kosong | Input transaksi akrual dulu: `utang_gaji`, `utang_pendapatan`, `sewa_jatuh_tempo` |
+| Periode terkunci | Jurnal penutup sudah dieksekusi. Klik **Reset All Data** untuk periode baru. |
+| Data hilang | Data di localStorage browser — jangan clear browser cache |
 
-## Author
+---
 
-**Eko Asif** — Accounting By Eko Asif
+## 📖 Dokumentasi Lengkap
+
+Lihat [`PANDUAN USER/BUKU_PANDUAN_LENGKAP.md`](PANDUAN%20USER/BUKU_PANDUAN_LENGKAP.md) untuk:
+- Contoh kasus nyata (perusahaan dagang, jasa, klinik)
+- Tabel jurnal lengkap dengan angka riil
+- Panduan jurnal penutup 4 tahap
+- FAQ & troubleshooting detail
+
+---
+
+## 👤 Author
+
+**Eko Asif** — Accounting By Eko Asif  
+Standar: PSAK (Pernyataan Standar Akuntansi Keuangan) Indonesia

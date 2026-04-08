@@ -228,6 +228,24 @@ button:disabled {
     background-color: #15803d;
 }
 
+.btn-warning {
+    background-color: var(--color-warning);
+    color: #1c1c1c;
+    box-shadow: var(--shadow-md);
+}
+
+.btn-warning:hover:not(:disabled) {
+    background-color: #ea580c;
+    color: var(--color-light-gray);
+    box-shadow: var(--shadow-lg);
+    transform: translateY(-1px);
+}
+
+.btn-warning:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+
 .btn-error {
     background-color: var(--color-error);
     color: var(--color-light-gray);

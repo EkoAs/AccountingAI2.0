@@ -133,6 +133,10 @@ function setupEventListeners() {
       ui.elements.exportDataBtn.addEventListener('click', handleExportData);
     }
 
+    if (ui.elements.closingJournalBtn) {
+      ui.elements.closingJournalBtn.addEventListener('click', handleClosingJournal);
+    }
+
     // Modal Events
     if (ui.elements.confirmCancel) {
       ui.elements.confirmCancel.addEventListener('click', ui.hideConfirmation.bind(ui));
@@ -326,9 +330,11 @@ function handleReset() {
         ui.showSuccess('✓ All data has been reset');
         ui.clearTransactionInput();
         ui.hideClassification();
+        ui.enableTransactionInput();
         ui.updateStatusBadge('Ready', 'success');
         updateReport();
         updateUndoRedoButtons();
+        updateClosingJournalBtn();
       } else {
         ui.showError('Failed to reset data');
       }
@@ -344,6 +350,8 @@ function handleDone() {
     // Return to edit mode
     app.returnToEditMode();
     ui.enableTransactionInput();
+    ui.hideClassification();
+    ui.clearTransactionInput();
     ui.updateStatusBadge('Ready', 'success');
     ui.showSuccess('Returned to edit mode');
   } else {
@@ -355,6 +363,8 @@ function handleDone() {
       return;
     }
 
+    ui.hideClassification();
+    ui.clearTransactionInput();
     ui.disableTransactionInput();
     ui.updateStatusBadge('Finalized', 'success');
     ui.showSuccess('Transactions finalized successfully');
@@ -365,7 +375,13 @@ function handleDone() {
  * Handle report type change
  */
 function handleReportTypeChange() {
+  // Reset label summary ke default sebelum update
+  const labelD = document.getElementById('labelTotalDebits');
+  const labelC = document.getElementById('labelTotalCredits');
+  if (labelD) labelD.textContent = 'Total Debits:';
+  if (labelC) labelC.textContent = 'Total Credits:';
   updateReport();
+  updateClosingJournalBtn();
 }
 
 /**
@@ -393,6 +409,56 @@ async function handleGeneratePDF() {
     ui.hideLoading();
     ui.showError('Error generating PDF');
     ui.updateStatusBadge('Error', 'error');
+  }
+}
+
+/**
+ * Handle closing journal execution (Mode 8)
+ */
+function handleClosingJournal() {
+  if (app.periodLocked) {
+    ui.showError('Periode sudah dikunci. Jurnal penutup sudah dieksekusi.');
+    return;
+  }
+  ui.showConfirmation(
+    '🔒 Eksekusi Jurnal Penutup',
+    'Ini akan menutup semua akun pendapatan & beban, memperbarui Modal, dan MENGUNCI periode. Tidak dapat dibatalkan kecuali Reset All Data. Lanjutkan?',
+    () => {
+      const result = app.executeClosingJournal();
+      if (!result.success) {
+        ui.showError(result.error);
+        return;
+      }
+      const label = result.isProfit ? 'Laba' : 'Rugi';
+      ui.showSuccess(`✓ Jurnal penutup selesai. ${label}: Rp ${Math.abs(result.netIncome).toLocaleString('id-ID')}. Periode dikunci.`);
+      // Pindah ke tampilan closing journal
+      if (ui.elements.reportTypeSelect) {
+        ui.elements.reportTypeSelect.value = 'closing-journal';
+      }
+      updateReport();
+      updateUndoRedoButtons();
+      updateClosingJournalBtn();
+      // Kunci input
+      ui.disableTransactionInput();
+      ui.updateStatusBadge('Periode Dikunci 🔒', 'error');
+    }
+  );
+}
+
+/**
+ * Tampilkan/sembunyikan tombol Eksekusi Jurnal Penutup
+ */
+function updateClosingJournalBtn() {
+  if (!ui.elements.closingJournalBtn) return;
+  const selectedReport = ui.getSelectedReportType();
+  if (selectedReport === 'closing-journal' && !app.periodLocked) {
+    ui.elements.closingJournalBtn.style.display = 'inline-flex';
+  } else if (app.periodLocked) {
+    ui.elements.closingJournalBtn.style.display = 'inline-flex';
+    ui.elements.closingJournalBtn.textContent = '🔒 Periode Dikunci';
+    ui.elements.closingJournalBtn.disabled = true;
+  } else {
+    ui.elements.closingJournalBtn.style.display = 'none';
   }
 }
 
@@ -483,6 +549,15 @@ function showAppInterface() {
       throw new Error('appSection element not found');
     }
     ui.showAppSection();
+    // Selalu enable input saat masuk app, kecuali period locked
+    if (app.periodLocked) {
+      ui.disableTransactionInput();
+      ui.updateStatusBadge('Periode Dikunci 🔒', 'error');
+      updateClosingJournalBtn();
+    } else {
+      ui.enableTransactionInput();
+      ui.updateStatusBadge('Ready', 'success');
+    }
     updateReport();
     updateUndoRedoButtons();
   } catch (error) {

@@ -228,6 +228,7 @@ Setiap transaksi HARUS menghasilkan **2 baris jurnal** (Debit + Kredit) dengan j
 | 1200 | Persediaan Barang Dagangan | Aset Lancar | Debit |
 | 1500 | Perlengkapan | Aset Lancar | Debit |
 | 1600 | Beban Dibayar Dimuka | Aset Lancar | Debit |
+| 1650 | Piutang Pendapatan | Aset Lancar | Debit |
 | 1800 | Peralatan | Aset Tetap | Debit |
 | 1810 | Akumulasi Penyusutan Peralatan | Aset Tetap | Kredit |
 
@@ -449,7 +450,11 @@ Return: { accountCode, accountName, debitCredit, confidence, reasoning }
 | General Journal | Catatan kronologis semua transaksi | Urutan tanggal |
 | General Ledger | Detail per akun dengan running balance | Per akun |
 | Trial Balance | Verifikasi persamaan akuntansi | Per akun (ringkasan) |
-| Reversing Journal | Pembalikan entri akrual | Urutan tanggal (terbalik) |
+| Reversing Journal | Pembalikan entri akrual (2200, 1650, 1300, 1400) | Urutan tanggal (terbalik) |
+| Adjusting Entries | Jurnal penyesuaian akhir periode | Per tipe penyesuaian |
+| Adjusted Trial Balance | Neraca saldo setelah penyesuaian | Per akun |
+| Financial Statements | Laba Rugi + Perubahan Ekuitas + Neraca | 3 laporan terintegrasi |
+| Closing Journal | Jurnal penutup + Neraca Saldo Setelah Penutupan | 4 tahap otomatis |
 
 ### 6.2 Cara Memilih Laporan
 
@@ -1138,12 +1143,14 @@ UTANG & PINJAMAN:
 
 ```
 □ Input semua transaksi periode berjalan
+□ Input jurnal penyesuaian (penyusutan, utang_gaji, utang_pendapatan, dll)
 □ Verifikasi setiap klasifikasi AI
 □ Cek status: ✅ BALANCED
-□ Generate semua 4 jenis laporan
+□ Generate semua laporan (Mode 1–7)
 □ Download PDF untuk arsip
 □ Export data JSON sebagai backup
-□ Catat saldo akhir untuk periode berikutnya
+□ Eksekusi Jurnal Penutup (Mode 8) — kunci periode
+□ Generate PDF Neraca Saldo Setelah Penutupan
 ```
 
 ### 13.5 Persamaan Akuntansi Cepat

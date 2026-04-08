@@ -94,6 +94,11 @@ class AIClassifier {
       .map(a => `${a.code}: ${a.name} (${a.type})`)
       .join('\n');
 
+    // ══════════════════════════════════════════════════════════════════
+    // PROMPT GEMINI AI — SISTEM AKUNTANSI PSAK
+    // Bagian ini dikirim ke Gemini API sebagai instruksi klasifikasi.
+    // Ubah isi prompt di sini untuk menyesuaikan perilaku AI.
+    // ══════════════════════════════════════════════════════════════════
     return `Kamu adalah sistem akuntansi profesional Indonesia yang mengikuti standar PSAK dan prinsip double-entry bookkeeping. Sistem ini mendukung perusahaan jasa maupun perusahaan dagang.
 
 TRANSAKSI:
@@ -239,6 +244,14 @@ D. BEBAN MASIH HARUS DIBAYAR (Accrued Expense):
   → DEBIT Beban Listrik dan Air (5300) + KREDIT Beban Yang Masih Harus Dibayar (2200)
 - beban_terutang / masih_harus_dibayar / accrued_expense
   → DEBIT Beban terkait (5xxx) + KREDIT Beban Yang Masih Harus Dibayar (2200)
+
+F. PENDAPATAN MASIH HARUS DITERIMA (Accrued Revenue):
+- utang_pendapatan / pendapatan_belum_diterima / piutang_pendapatan / accrued_revenue
+- pendapatan_terutang / invoice_belum_cair / tagihan_belum_dibayar
+- pendapatan_masih_harus_diterima / jasa_belum_dibayar_klien
+  → DEBIT Piutang Pendapatan (1650) + KREDIT Penjualan/Pendapatan (4000)
+  ⚠️ Jasa SUDAH selesai dikerjakan tapi uang BELUM diterima → Aset (1650), bukan Kas
+  ⚠️ Berbeda dengan Pendapatan Diterima Dimuka (2300) yang uangnya sudah masuk tapi jasa belum dikerjakan
 
 E. PENDAPATAN DITERIMA DI MUKA DIAKUI:
 - pendapatan_diakui / jasa_selesai / dp_selesai / panjar_selesai / unearned_earned

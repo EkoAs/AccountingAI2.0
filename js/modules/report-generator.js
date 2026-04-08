@@ -8,7 +8,8 @@ class ReportGenerator {
   constructor() {
     this.reportTypes = [
       'general-journal', 'general-ledger', 'trial-balance', 'reversing-journal',
-      'adjusting-entries', 'adjusted-trial-balance', 'financial-statements'
+      'adjusting-entries', 'adjusted-trial-balance', 'financial-statements',
+      'closing-journal'
     ];
   }
 
@@ -37,6 +38,7 @@ class ReportGenerator {
       case 'adjusting-entries':      return generateAdjustingEntries(transactions, chartOfAccounts, metadata);
       case 'adjusted-trial-balance': return generateAdjustedTrialBalance(transactions, chartOfAccounts, metadata);
       case 'financial-statements':   return generateFinancialStatements(transactions, chartOfAccounts, metadata);
+      case 'closing-journal':        return generateClosingJournal(transactions, chartOfAccounts, metadata);
       default: return null;
     }
   }

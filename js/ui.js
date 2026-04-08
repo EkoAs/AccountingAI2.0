@@ -46,6 +46,7 @@ class UIManager {
     this.elements.emptyState = document.getElementById('emptyState');
     this.elements.generatePdfBtn = document.getElementById('generatePdfBtn');
     this.elements.exportDataBtn = document.getElementById('exportDataBtn');
+    this.elements.closingJournalBtn = document.getElementById('closingJournalBtn');
     this.elements.settingsBtn = document.getElementById('settingsBtn');
     this.elements.settingsModal = document.getElementById('settingsModal');
     this.elements.closeSettingsBtn = document.getElementById('closeSettingsBtn');
@@ -136,17 +137,39 @@ class UIManager {
 
   updateReportSummary(summary) {
     if (!summary) return;
-    if (this.elements.totalDebits) this.elements.totalDebits.textContent = this.formatCurrency(summary.totalDebits || 0);
+
+    // Gunakan label custom jika ada (misal Financial Statements pakai "Total Aset" / "Total L+E")
+    const labelD = summary.labelDebits  || 'Total Debits:';
+    const labelC = summary.labelCredits || 'Total Credits:';
+
+    // Update label teks jika elemen label tersedia
+    const labelDebitsEl  = document.getElementById('labelTotalDebits');
+    const labelCreditsEl = document.getElementById('labelTotalCredits');
+    if (labelDebitsEl)  labelDebitsEl.textContent  = labelD;
+    if (labelCreditsEl) labelCreditsEl.textContent = labelC;
+
+    if (this.elements.totalDebits)  this.elements.totalDebits.textContent  = this.formatCurrency(summary.totalDebits  || 0);
     if (this.elements.totalCredits) this.elements.totalCredits.textContent = this.formatCurrency(summary.totalCredits || 0);
     if (this.elements.balanceStatus) {
-      if (summary.balanced) {
+      // Gunakan field 'balanced' jika ada, fallback ke perbandingan debit vs kredit
+      const isBalanced = (summary.balanced !== undefined)
+        ? summary.balanced
+        : Math.abs((summary.totalDebits || 0) - (summary.totalCredits || 0)) < 0.01;
+
+      if (isBalanced) {
         this.elements.balanceStatus.textContent = '✓ Balanced';
         this.elements.balanceStatus.className = 'status-indicator balanced';
         if (this.elements.generatePdfBtn) this.elements.generatePdfBtn.disabled = false;
       } else {
         this.elements.balanceStatus.textContent = '✗ Unbalanced';
         this.elements.balanceStatus.className = 'status-indicator unbalanced';
-        if (this.elements.generatePdfBtn) this.elements.generatePdfBtn.disabled = true;
+        // Hanya disable PDF untuk mode yang memerlukan balance (jurnal umum & neraca saldo)
+        // Mode laporan view-only (pembalik, keuangan, penutup, dll) tetap bisa cetak PDF
+        const viewOnlyModes = ['reversing-journal', 'adjusting-entries', 'adjusted-trial-balance', 'financial-statements', 'closing-journal'];
+        const currentMode = this.elements.reportTypeSelect ? this.elements.reportTypeSelect.value : '';
+        if (this.elements.generatePdfBtn) {
+          this.elements.generatePdfBtn.disabled = !viewOnlyModes.includes(currentMode);
+        }
       }
     }
   }
@@ -173,6 +196,7 @@ class UIManager {
       case 'Adjusting Entries':        renderAdjustingEntries(report, el, fmt);        break;
       case 'Adjusted Trial Balance':   renderAdjustedTrialBalance(report, el, fmt);   break;
       case 'Financial Statements':     renderFinancialStatements(report, el, fmt);     break;
+      case 'Closing Journal':          renderClosingJournal(report, el, fmt);          break;
     }
   }
 

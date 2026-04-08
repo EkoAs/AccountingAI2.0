@@ -219,6 +219,7 @@ class AuthManager {
       { code: '1400', name: 'Asuransi Dibayar di Muka', type: 'Asset', category: 'Aset Lancar', balance: 0 },
       { code: '1500', name: 'Perlengkapan', type: 'Asset', category: 'Aset Lancar', balance: 0 },
       { code: '1600', name: 'Beban Dibayar Dimuka', type: 'Asset', category: 'Aset Lancar', balance: 0 },
+      { code: '1650', name: 'Piutang Pendapatan', type: 'Asset', category: 'Aset Lancar', balance: 0 },
       { code: '1800', name: 'Peralatan', type: 'Asset', category: 'Aset Tetap', balance: 0 },
       { code: '1810', name: 'Akumulasi Penyusutan Peralatan', type: 'Asset', category: 'Aset Tetap', balance: 0 },
       // LIABILITAS (2000-2999)

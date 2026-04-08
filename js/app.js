@@ -18,6 +18,40 @@ class AccountingApp {
     this.isFinalized = false;
     this.undoStack = [];
     this.redoStack = [];
+    this.periodLocked = false;
+  }
+
+  /**
+   * Execute closing journal (Mode 8) — otomatis 4 tahap
+   * Setelah dieksekusi, periode dikunci
+   */
+  executeClosingJournal() {
+    if (this.periodLocked) {
+      return { success: false, error: 'Periode sudah dikunci. Jurnal penutup sudah pernah dieksekusi.' };
+    }
+    try {
+      const report = generateClosingJournal(this.transactions, this.chartOfAccounts, this.metadata);
+      if (!report || !report.entries || report.entries.length === 0) {
+        return { success: false, error: 'Tidak ada akun nominal (pendapatan/beban) untuk ditutup.' };
+      }
+      this.undoStack.push(JSON.parse(JSON.stringify(this.transactions)));
+      this.redoStack = [];
+      const closingTxns = _buildClosingTransactions(report.entries);
+      closingTxns.forEach(t => this.transactions.push(t));
+      storageManager.saveData(this.currentUser, 'transactions', this.transactions);
+      this.periodLocked = true;
+      storageManager.saveData(this.currentUser, 'periodLocked', true);
+      return {
+        success: true,
+        message: 'Jurnal penutup berhasil dieksekusi. Periode dikunci.',
+        netIncome: report.netIncome,
+        isProfit: report.isProfit,
+        isBalanced: report.isBalanced
+      };
+    } catch (error) {
+      console.error('Error executing closing journal:', error);
+      return { success: false, error: 'Gagal mengeksekusi jurnal penutup: ' + error.message };
+    }
   }
 
   /**
@@ -107,9 +141,15 @@ class AccountingApp {
       storageManager.saveData(this.currentUser, 'chartOfAccounts', this.chartOfAccounts);
     }
 
+    // Load period lock status
+    this.periodLocked = storageManager.loadData(this.currentUser, 'periodLocked') || false;
+    // isFinalized tidak dipersist — selalu mulai dari false setiap sesi
+    this.isFinalized = false;
+    // Pastikan input tidak terkunci dari sesi sebelumnya (kecuali period locked)
+    // UI restore dilakukan di showAppInterface setelah loadUserData selesai
+
     // Load metadata — try dedicated 'metadata' key first, fallback to profile
-    const savedMeta = storageManager.loadData(this.currentUser, 'metadata');
-    if (savedMeta && savedMeta.organizationName) {
+    const savedMeta = storageManager.loadData(this.currentUser, 'metadata');    if (savedMeta && savedMeta.organizationName) {
       this.metadata = {
         organizationName: savedMeta.organizationName || '',
         reportTitle: savedMeta.reportTitle || 'Laporan Keuangan',
@@ -199,6 +239,9 @@ class AccountingApp {
    */
   confirmTransaction(transactionData) {
     try {
+      if (this.periodLocked) {
+        return { error: 'Periode sudah dikunci setelah jurnal penutup. Tidak dapat menambah transaksi baru.' };
+      }
       this.undoStack.push(JSON.parse(JSON.stringify(this.transactions)));
       this.redoStack = [];
 
@@ -496,6 +539,7 @@ class AccountingApp {
       dateRange: ''
     };
     this.isFinalized = false;
+    this.periodLocked = false;
     this.undoStack = [];
     this.redoStack = [];
   }
@@ -510,9 +554,11 @@ class AccountingApp {
       this.chartOfAccounts = authManager.getDefaultChartOfAccounts();
       storageManager.saveData(this.currentUser, 'transactions', []);
       storageManager.saveData(this.currentUser, 'chartOfAccounts', this.chartOfAccounts);
+      storageManager.saveData(this.currentUser, 'periodLocked', false);
       this.undoStack = [];
       this.redoStack = [];
       this.isFinalized = false;
+      this.periodLocked = false;
       return true;
     } catch (error) {
       console.error('Error resetting data:', error);

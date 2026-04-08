@@ -1,6 +1,23 @@
 /**
  * PDF Generator Module — Dispatcher + Shared Primitives
  * Mendelegasikan konten per-mode ke js/modules/reports/*.js
+ *
+ * ══════════════════════════════════════════════════════════════════
+ * STRUKTUR FILE INI:
+ *   1. generatePDF()     — Entry point, dispatch ke per-mode renderer
+ *   2. _addHeader()      — Header halaman (nama perusahaan, penyusun)
+ *   3. _addReportTitle() — Judul laporan di tengah halaman
+ *   4. _tableHeader()    — Baris header tabel (abu-abu)
+ *   5. _tableRow()       — Baris data tabel biasa
+ *   6. _totalRow()       — Baris total (bold, abu lebih gelap)
+ *   7. _addPageNumbers() — Footer nomor halaman
+ * ══════════════════════════════════════════════════════════════════
+ * UNTUK MENAMBAH MODE BARU:
+ *   1. Buat file js/modules/reports/nama-mode.js
+ *   2. Tambah case di switch generatePDF()
+ *   3. Tambah entry di _addReportTitle() titles map
+ *   4. Tambah <script> tag di index.html
+ * ══════════════════════════════════════════════════════════════════
  */
 
 class PDFGenerator {
@@ -45,6 +62,7 @@ class PDFGenerator {
         case 'Adjusting Entries':      y = pdfAdjustingEntries(doc, reportData, y, helpers);      break;
         case 'Adjusted Trial Balance': y = pdfAdjustedTrialBalance(doc, reportData, y, helpers);  break;
         case 'Financial Statements':   y = pdfFinancialStatements(doc, reportData, y, helpers);   break;
+        case 'Closing Journal':        y = pdfClosingJournal(doc, reportData, y, helpers);        break;
       }
 
       this._addPageNumbers(doc);
@@ -109,10 +127,14 @@ class PDFGenerator {
 
   _addReportTitle(doc, type, y) {
     const titles = {
-      'General Journal':   'JURNAL UMUM',
-      'General Ledger':    'BUKU BESAR',
-      'Trial Balance':     'NERACA SALDO',
-      'Reversing Journal': 'JURNAL PEMBALIK'
+      'General Journal':        'JURNAL UMUM',
+      'General Ledger':         'BUKU BESAR',
+      'Trial Balance':          'NERACA SALDO',
+      'Reversing Journal':      'JURNAL PEMBALIK',
+      'Adjusting Entries':      'JURNAL PENYESUAIAN',
+      'Adjusted Trial Balance': 'NERACA SALDO DISESUAIKAN',
+      'Financial Statements':   'LAPORAN KEUANGAN',
+      'Closing Journal':        'JURNAL PENUTUP'
     };
     doc.setFontSize(12);
     doc.setFont('times', 'bold');
