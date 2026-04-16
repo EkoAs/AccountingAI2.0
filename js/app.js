@@ -149,7 +149,8 @@ class AccountingApp {
     // UI restore dilakukan di showAppInterface setelah loadUserData selesai
 
     // Load metadata — try dedicated 'metadata' key first, fallback to profile
-    const savedMeta = storageManager.loadData(this.currentUser, 'metadata');    if (savedMeta && savedMeta.organizationName) {
+    const savedMeta = storageManager.loadData(this.currentUser, 'metadata');
+    if (savedMeta && savedMeta.organizationName) {
       this.metadata = {
         organizationName: savedMeta.organizationName || '',
         reportTitle: savedMeta.reportTitle || 'Laporan Keuangan',

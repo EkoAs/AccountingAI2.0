@@ -91,20 +91,24 @@ class UIManager {
   }
 
   showClassification(classification) {
+    if (!this.elements.classifiedAccount) return;
     this.elements.classifiedAccount.textContent =
       (classification.account || classification.accountName || 'N/A') +
       (classification.offsetAccountName ? ' → ' + classification.offsetAccountName : '');
-    this.elements.classifiedType.textContent = classification.accountType || classification.classification || 'N/A';
-
-    // Always show DEBIT for primary account (double-entry: primary is always debit side)
-    this.elements.classifiedDebitCredit.textContent =
-      'DEBIT: ' + (classification.account || 'N/A') +
-      ' | KREDIT: ' + (classification.offsetAccountName || 'Kas');
-
-    this.elements.classifiedAmount.textContent = this.formatCurrency(classification.totalAmount || 0);
-    this.elements.classificationReasoning.textContent = classification.reasoning || 'No reasoning provided';
-    this.elements.confidenceScore.textContent = Math.round((classification.aiConfidence || 0) * 100) + '%';
-    this.elements.classificationDisplay.style.display = 'block';
+    if (this.elements.classifiedType)
+      this.elements.classifiedType.textContent = classification.accountType || classification.classification || 'N/A';
+    if (this.elements.classifiedDebitCredit)
+      this.elements.classifiedDebitCredit.textContent =
+        'DEBIT: ' + (classification.account || 'N/A') +
+        ' | KREDIT: ' + (classification.offsetAccountName || 'Kas');
+    if (this.elements.classifiedAmount)
+      this.elements.classifiedAmount.textContent = this.formatCurrency(classification.totalAmount || 0);
+    if (this.elements.classificationReasoning)
+      this.elements.classificationReasoning.textContent = classification.reasoning || 'No reasoning provided';
+    if (this.elements.confidenceScore)
+      this.elements.confidenceScore.textContent = Math.round((classification.aiConfidence || 0) * 100) + '%';
+    if (this.elements.classificationDisplay)
+      this.elements.classificationDisplay.style.display = 'block';
   }
 
   hideClassification() {

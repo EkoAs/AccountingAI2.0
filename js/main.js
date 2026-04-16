@@ -17,6 +17,9 @@ document.addEventListener('DOMContentLoaded', () => {
  */
 function initializeApp() {
   try {
+    // Reset state global
+    window.currentTransaction = null;
+
     // Create a temporary session user (no login required)
     const tempUserId = sessionStorage.getItem('currentUser') || ('temp_user_' + Date.now());
     app.currentUser = tempUserId;
@@ -215,6 +218,10 @@ async function handleTransactionSubmit() {
     return;
   }
 
+  // Clear transaksi sebelumnya jika ada (prevent stale state)
+  window.currentTransaction = null;
+  ui.hideClassification();
+
   ui.showLoading();
   ui.updateStatusBadge('Processing...', 'warning');
 
@@ -366,8 +373,8 @@ function handleDone() {
     ui.hideClassification();
     ui.clearTransactionInput();
     ui.disableTransactionInput();
-    ui.updateStatusBadge('Finalized', 'success');
-    ui.showSuccess('Transactions finalized successfully');
+    ui.updateStatusBadge('Finalized ✓', 'success');
+    ui.showSuccess('✓ Laporan difinalisasi. Klik "Edit" untuk input transaksi baru.');
   }
 }
 
