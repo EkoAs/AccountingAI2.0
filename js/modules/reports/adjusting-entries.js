@@ -150,7 +150,7 @@ function renderAdjustingEntries(report, elements, formatCurrency) {
 /* ── PDF Renderer ────────────────────────────────────────────────────── */
 
 function pdfAdjustingEntries(doc, data, y, helpers) {
-  const { tableHeader, tableRow, totalRow, checkNewPage, fmt, truncate } = helpers;
+  const { tableHeader, tableRow, totalRow, checkNewPage, fmt } = helpers;
 
   const cols   = ['Tanggal', 'Tipe', 'Kode', 'Nama Akun', 'Keterangan', 'Debet', 'Kredit'];
   const widths = [20, 30, 12, 32, 40, 26, 26];
@@ -177,8 +177,8 @@ function pdfAdjustingEntries(doc, data, y, helpers) {
       e.date || '',
       typeLabel,
       e.accountCode || '',
-      truncate(e.account || '', 20),
-      truncate(e.description || '', 24),
+      e.account || '',
+      e.description || '',
       e.debit  > 0 ? fmt(e.debit)  : '-',
       e.credit > 0 ? fmt(e.credit) : '-'
     ];

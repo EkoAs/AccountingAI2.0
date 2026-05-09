@@ -146,23 +146,43 @@ class PDFGenerator {
   /* ── Table Primitives ────────────────────────────────────────────── */
 
   _tableHeader(doc, cols, widths, y) {
-    const rowH = this.lh + 1;
+    doc.setFontSize(8);
+    doc.setFont('times', 'bold');
+    doc.setTextColor(20, 20, 20);
+    
+    // Calculate row height based on text wrapping
+    let maxLines = 1;
+    let x = this.ml;
+    cols.forEach((col, i) => {
+      const maxWidth = widths[i] - 3; // padding
+      const lines = doc.splitTextToSize(col, maxWidth);
+      maxLines = Math.max(maxLines, lines.length);
+    });
+    
+    const rowH = Math.max(this.lh + 1, this.lh * maxLines);
+    
+    // Draw cell backgrounds and borders
     doc.setFillColor(210, 210, 210);
     doc.setDrawColor(140, 140, 140);
     doc.setLineWidth(0.3);
-
-    let x = this.ml;
+    x = this.ml;
     cols.forEach((_col, i) => {
       doc.rect(x, y, widths[i], rowH, 'FD');
       x += widths[i];
     });
 
-    doc.setFontSize(8);
-    doc.setFont('times', 'bold');
-    doc.setTextColor(20, 20, 20);
+    // Draw text with wrapping
     x = this.ml;
     cols.forEach((col, i) => {
-      doc.text(col, x + widths[i] / 2, y + rowH * 0.68, { align: 'center' });
+      const maxWidth = widths[i] - 3;
+      const lines = doc.splitTextToSize(col, maxWidth);
+      
+      // Center each line
+      lines.forEach((line, lineIdx) => {
+        const yText = y + (lineIdx + 0.68) * this.lh;
+        doc.text(line, x + widths[i] / 2, yText, { align: 'center' });
+      });
+      
       x += widths[i];
     });
 
@@ -170,27 +190,49 @@ class PDFGenerator {
   }
 
   _tableRow(doc, rowData, widths, y) {
-    const rowH = this.lh;
+    doc.setFontSize(8);
+    doc.setFont('times', 'normal');
+    doc.setTextColor(30, 30, 30);
+    
+    // Calculate row height based on text wrapping
+    let maxLines = 1;
+    let x = this.ml;
+    rowData.forEach((val, i) => {
+      const str = String(val);
+      const maxWidth = widths[i] - 3; // padding
+      const lines = doc.splitTextToSize(str, maxWidth);
+      maxLines = Math.max(maxLines, lines.length);
+    });
+    
+    const rowH = this.lh * maxLines;
+    
+    // Draw cell backgrounds and borders
     doc.setDrawColor(180, 180, 180);
     doc.setLineWidth(0.2);
     doc.setFillColor(255, 255, 255);
-
-    let x = this.ml;
+    x = this.ml;
     widths.forEach(w => {
       doc.rect(x, y, w, rowH, 'FD');
       x += w;
     });
 
-    doc.setFontSize(8);
-    doc.setFont('times', 'normal');
-    doc.setTextColor(30, 30, 30);
+    // Draw text with wrapping
     x = this.ml;
     rowData.forEach((val, i) => {
       const str = String(val);
       const isNumeric = /^(Rp|-)/.test(str) || (/[\d.,]+/.test(str) && str.includes(','));
+      const maxWidth = widths[i] - 3;
+      const lines = doc.splitTextToSize(str, maxWidth);
+      
       const align = isNumeric ? 'right' : 'left';
       const xText = isNumeric ? x + widths[i] - 1.5 : x + 1.5;
-      doc.text(str, xText, y + rowH * 0.68, { align });
+      
+      // Draw each line
+      lines.forEach((line, lineIdx) => {
+        const yText = y + (lineIdx + 0.68) * this.lh;
+        doc.text(line, xText, yText, { align });
+      });
+      
       x += widths[i];
     });
 
@@ -198,27 +240,49 @@ class PDFGenerator {
   }
 
   _totalRow(doc, rowData, widths, y) {
-    const rowH = this.lh + 1;
+    doc.setFontSize(8);
+    doc.setFont('times', 'bold');
+    doc.setTextColor(20, 20, 20);
+    
+    // Calculate row height based on text wrapping
+    let maxLines = 1;
+    let x = this.ml;
+    rowData.forEach((val, i) => {
+      const str = String(val);
+      const maxWidth = widths[i] - 3; // padding
+      const lines = doc.splitTextToSize(str, maxWidth);
+      maxLines = Math.max(maxLines, lines.length);
+    });
+    
+    const rowH = Math.max(this.lh + 1, this.lh * maxLines);
+    
+    // Draw cell backgrounds and borders
     doc.setFillColor(225, 225, 225);
     doc.setDrawColor(120, 120, 120);
     doc.setLineWidth(0.4);
-
-    let x = this.ml;
+    x = this.ml;
     widths.forEach(w => {
       doc.rect(x, y, w, rowH, 'FD');
       x += w;
     });
 
-    doc.setFontSize(8);
-    doc.setFont('times', 'bold');
-    doc.setTextColor(20, 20, 20);
+    // Draw text with wrapping
     x = this.ml;
     rowData.forEach((val, i) => {
       const str = String(val);
       const isNumeric = /^(Rp|-)/.test(str) || (/[\d.,]+/.test(str) && str.includes(','));
+      const maxWidth = widths[i] - 3;
+      const lines = doc.splitTextToSize(str, maxWidth);
+      
       const align = isNumeric ? 'right' : 'left';
       const xText = isNumeric ? x + widths[i] - 1.5 : x + 1.5;
-      doc.text(str, xText, y + rowH * 0.68, { align });
+      
+      // Draw each line
+      lines.forEach((line, lineIdx) => {
+        const yText = y + (lineIdx + 0.68) * this.lh;
+        doc.text(line, xText, yText, { align });
+      });
+      
       x += widths[i];
     });
 
@@ -261,6 +325,7 @@ class PDFGenerator {
     return new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(amount);
   }
 
+  // Deprecated: Use doc.splitTextToSize() for text wrapping instead
   _truncate(str, maxLen) {
     if (!str) return '';
     return str.length > maxLen ? str.substring(0, maxLen - 1) + '…' : str;

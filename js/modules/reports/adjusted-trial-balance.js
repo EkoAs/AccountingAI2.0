@@ -80,7 +80,7 @@ function renderAdjustedTrialBalance(report, elements, formatCurrency) {
 /* ── PDF Renderer ────────────────────────────────────────────────────── */
 
 function pdfAdjustedTrialBalance(doc, data, y, helpers) {
-  const { tableHeader, tableRow, totalRow, checkNewPage, fmt, truncate } = helpers;
+  const { tableHeader, tableRow, totalRow, checkNewPage, fmt } = helpers;
 
   const cols   = ['Kode Akun', 'Nama Akun', 'Debet', 'Kredit', 'Ket.'];
   const widths = [24, 100, 27, 27, 8];
@@ -91,7 +91,7 @@ function pdfAdjustedTrialBalance(doc, data, y, helpers) {
     y = checkNewPage(doc, y, cols, widths, tableHeader);
     const row = [
       e.code,
-      truncate(e.name, 58),
+      e.name,
       e.debitBalance  > 0 ? fmt(e.debitBalance)  : '-',
       e.creditBalance > 0 ? fmt(e.creditBalance) : '-',
       e.isAdjusted ? '✦' : ''

@@ -177,7 +177,7 @@ function renderGeneralLedger(report, elements, formatCurrency) {
 /* ── PDF Renderer ────────────────────────────────────────────────────── */
 
 function pdfGeneralLedger(doc, data, y, helpers) {
-  const { tableHeader, tableRow, totalRow, checkNewPage, fmt, truncate, ph, mb, mt } = helpers;
+  const { tableHeader, tableRow, totalRow, checkNewPage, fmt, ph, mb, mt } = helpers;
 
   const cols   = ['Tanggal', 'Keterangan', 'No Ref', 'Debet', 'Kredit', 'Saldo D', 'Saldo K'];
   const widths = [22, 52, 18, 24, 24, 23, 23];
@@ -196,7 +196,7 @@ function pdfGeneralLedger(doc, data, y, helpers) {
       y = checkNewPage(doc, y, cols, widths, tableHeader);
       const row = [
         t.date || '',
-        truncate(t.description || '', 32),
+        t.description || '',
         t.ref || '',
         t.debit > 0        ? fmt(t.debit)        : '-',
         t.credit > 0       ? fmt(t.credit)       : '-',

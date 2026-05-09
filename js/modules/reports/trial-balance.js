@@ -56,7 +56,7 @@ function renderTrialBalance(report, elements, formatCurrency) {
 /* ── PDF Renderer ────────────────────────────────────────────────────── */
 
 function pdfTrialBalance(doc, data, y, helpers) {
-  const { tableHeader, tableRow, totalRow, checkNewPage, fmt, truncate } = helpers;
+  const { tableHeader, tableRow, totalRow, checkNewPage, fmt } = helpers;
 
   const cols   = ['Kode Akun', 'Nama Akun', 'Debet', 'Kredit'];
   const widths = [24, 108, 27, 27];
@@ -67,7 +67,7 @@ function pdfTrialBalance(doc, data, y, helpers) {
     y = checkNewPage(doc, y, cols, widths, tableHeader);
     const row = [
       e.code,
-      truncate(e.name, 60),
+      e.name,
       e.debitBalance  > 0 ? fmt(e.debitBalance)  : '-',
       e.creditBalance > 0 ? fmt(e.creditBalance) : '-'
     ];

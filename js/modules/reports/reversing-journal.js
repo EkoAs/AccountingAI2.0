@@ -133,7 +133,7 @@ function renderReversingJournal(report, elements, formatCurrency) {
 /* ── PDF Renderer ────────────────────────────────────────────────────── */
 
 function pdfReversingJournal(doc, data, y, helpers) {
-  const { tableHeader, tableRow, totalRow, checkNewPage, fmt, truncate, ml, ph, mb } = helpers;
+  const { tableHeader, tableRow, totalRow, checkNewPage, fmt, ml, ph, mb } = helpers;
 
   const cols   = ['Tanggal', 'Kode', 'Nama Akun', 'Keterangan', 'Debet', 'Kredit'];
   const widths = [22, 14, 38, 52, 30, 30];
@@ -157,8 +157,8 @@ function pdfReversingJournal(doc, data, y, helpers) {
     const row = [
       e.date || '',
       e.accountCode || '',
-      truncate(e.account || '', 22),
-      truncate(e.description || '', 30),
+      e.account || '',
+      e.description || '',
       e.debit  > 0 ? fmt(e.debit)  : '-',
       e.credit > 0 ? fmt(e.credit) : '-'
     ];
