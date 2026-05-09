@@ -259,6 +259,35 @@ E. PENDAPATAN DITERIMA DI MUKA DIAKUI:
   ⚠️ Ini kebalikan dari saat terima DP — sekarang Liabilitas berkurang, Pendapatan diakui
 
 ═══════════════════════════════════════════════
+PERSEDIAAN BARANG DAGANGAN & HPP — PERUSAHAAN DAGANG
+═══════════════════════════════════════════════
+PERSEDIAAN (Akun 1200 = ASET, bukan Beban):
+- beli_persediaan / beli_barang_dagang / tambah_stok
+  → DEBIT Persediaan Barang Dagangan (1200) + KREDIT Kas (1000)
+- beli_persediaan_kredit / stok_kredit
+  → DEBIT Persediaan Barang Dagangan (1200) + KREDIT Utang Dagang (2000)
+⚠️ Persediaan adalah ASET (1200) sampai terjual. Saat terjual baru jadi HPP (5050).
+
+HARGA POKOK PENJUALAN (HPP):
+- hpp / harga_pokok_penjualan / cogs / cost_of_goods
+  → DEBIT HPP (5050) + KREDIT Persediaan (1200)
+- persediaan_akhir / stok_akhir
+  → DEBIT Persediaan (1200) + KREDIT HPP (5050)
+- persediaan_awal / stok_awal (metode Ikhtisar L/R)
+  → DEBIT Ikhtisar Laba Rugi (9000) + KREDIT Persediaan (1200)
+⚠️ Rumus HPP = Persediaan Awal + Pembelian Bersih - Persediaan Akhir
+   Pembelian Bersih = Pembelian (5010) + Beban Angkut (5040) - Retur (5020) - Potongan (5030)
+
+TERMIN / DISKON OTOMATIS (Syarat 2/10, n/30):
+- Jika kata kunci mengandung syarat kredit seperti "2/10", "2/15", "n/30", "termin"
+  → Catat sebagai pembelian/penjualan KREDIT (Utang/Piutang Dagang)
+- Saat pelunasan dalam periode diskon (≤ 10 hari):
+  - Potongan penjualan: DEBIT Potongan Penjualan (4200) + KREDIT Piutang Dagang (1100)
+  - Potongan pembelian: DEBIT Utang Dagang (2000) + KREDIT Potongan Pembelian (5030)
+- termin_jual / diskon_termin_jual → Potongan Penjualan (4200) / Piutang (1100)
+- termin_beli / diskon_termin_beli → Utang Dagang (2000) / Potongan Pembelian (5030)
+
+═══════════════════════════════════════════════
 ATURAN KRITIS — WAJIB DIPATUHI
 ═══════════════════════════════════════════════
 1. "investor", "investasi", "modal", "setoran" → Modal Pemilik (3000), BUKAN Beban (5xxx)

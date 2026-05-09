@@ -19,7 +19,10 @@ const ADJUSTING_KEYWORDS = {
                     'accrued_revenue', 'pendapatan_terutang', 'jasa_belum_dibayar_klien',
                     'invoice_belum_cair', 'tagihan_belum_dibayar', 'pendapatan_masih_harus_diterima'],
   unearned:        ['pendapatan_diakui', 'jasa_selesai', 'unearned_earned',
-                    'pendapatan_dimuka_diakui', 'dp_selesai', 'panjar_selesai']
+                    'pendapatan_dimuka_diakui', 'dp_selesai', 'panjar_selesai'],
+  // Penyesuaian persediaan barang dagangan (perusahaan dagang)
+  inventory:       ['persediaan_akhir', 'stok_akhir', 'persediaan_awal', 'stok_awal',
+                    'hpp', 'harga_pokok_penjualan', 'cogs', 'penyesuaian_persediaan']
 };
 
 /**
@@ -97,6 +100,7 @@ const ADJUSTING_TYPE_LABELS = {
   accrued:         '⏳ Beban Masih Harus Dibayar',
   accrued_revenue: '💵 Pendapatan Masih Harus Diterima',
   unearned:        '💰 Pendapatan Diterima di Muka',
+  inventory:       '📦 Penyesuaian Persediaan (HPP)',
   other:           '📝 Penyesuaian Lainnya'
 };
 

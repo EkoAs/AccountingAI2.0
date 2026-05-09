@@ -240,6 +240,8 @@ class AuthManager {
       { code: '5020', name: 'Retur Pembelian dan Potongan Harga', type: 'Revenue', category: 'Harga Pokok', balance: 0 },
       { code: '5030', name: 'Potongan Pembelian', type: 'Revenue', category: 'Harga Pokok', balance: 0 },
       { code: '5040', name: 'Beban Angkut Pembelian', type: 'Expense', category: 'Harga Pokok', balance: 0 },
+      // Akun HPP (digunakan saat pendekatan HPP di jurnal penyesuaian)
+      { code: '5050', name: 'Harga Pokok Penjualan (HPP)', type: 'Expense', category: 'Harga Pokok', balance: 0 },
       { code: '5100', name: 'Beban Gaji', type: 'Expense', category: 'Beban Usaha', balance: 0 },
       { code: '5200', name: 'Beban Sewa', type: 'Expense', category: 'Beban Usaha', balance: 0 },
       { code: '5300', name: 'Beban Listrik dan Air', type: 'Expense', category: 'Beban Usaha', balance: 0 },

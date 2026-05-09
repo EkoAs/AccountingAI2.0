@@ -107,8 +107,14 @@ class UIManager {
       this.elements.classificationReasoning.textContent = classification.reasoning || 'No reasoning provided';
     if (this.elements.confidenceScore)
       this.elements.confidenceScore.textContent = Math.round((classification.aiConfidence || 0) * 100) + '%';
-    if (this.elements.classificationDisplay)
+    if (this.elements.classificationDisplay) {
       this.elements.classificationDisplay.style.display = 'block';
+      // Scroll input panel ke atas agar classification terlihat
+      const inputPanel = this.elements.classificationDisplay.closest('.input-panel');
+      if (inputPanel) {
+        inputPanel.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }
+    }
   }
 
   hideClassification() {

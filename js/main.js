@@ -19,6 +19,7 @@ function initializeApp() {
   try {
     // Reset state global
     window.currentTransaction = null;
+    window._isProcessingTransaction = false;
 
     // Create a temporary session user (no login required)
     const tempUserId = sessionStorage.getItem('currentUser') || ('temp_user_' + Date.now());
@@ -91,8 +92,9 @@ function setupEventListeners() {
 
     // Transaction Input Events
     if (ui.elements.transactionInput) {
-      ui.elements.transactionInput.addEventListener('keypress', (e) => {
+      ui.elements.transactionInput.addEventListener('keydown', (e) => {
         if (e.key === 'Enter') {
+          e.preventDefault();
           handleTransactionSubmit();
         }
       });
@@ -211,16 +213,19 @@ function handleLogout() {
  * Handle transaction submit
  */
 async function handleTransactionSubmit() {
-  const input = ui.getTransactionInput();
+  if (window._isProcessingTransaction) return;
 
+  const input = ui.getTransactionInput();
   if (!input.trim()) {
     ui.showError('Please enter a transaction');
     return;
   }
 
-  // Clear transaksi sebelumnya jika ada (prevent stale state)
+  window._isProcessingTransaction = true;
   window.currentTransaction = null;
   ui.hideClassification();
+  if (ui.elements.successMessage) ui.elements.successMessage.style.display = 'none';
+  if (ui.elements.errorMessage) ui.elements.errorMessage.style.display = 'none';
 
   ui.showLoading();
   ui.updateStatusBadge('Processing...', 'warning');
@@ -232,19 +237,25 @@ async function handleTransactionSubmit() {
       ui.hideLoading();
       ui.showError(result.error);
       ui.updateStatusBadge('Error', 'error');
+      window._isProcessingTransaction = false;
       return;
     }
 
     ui.hideLoading();
     ui.showClassification(result);
     ui.updateStatusBadge('Ready for confirmation', 'info');
-    
-    // Store current transaction for confirmation
     window.currentTransaction = result;
+
+    // Auto-focus tombol Confirm agar user bisa tekan Enter atau Space untuk confirm
+    if (ui.elements.confirmBtn) {
+      ui.elements.confirmBtn.focus();
+    }
   } catch (error) {
     ui.hideLoading();
-    ui.showError('Failed to process transaction');
+    ui.showError('Failed to process transaction: ' + error.message);
     ui.updateStatusBadge('Error', 'error');
+  } finally {
+    window._isProcessingTransaction = false;
   }
 }
 
@@ -284,6 +295,7 @@ function handleConfirmTransaction() {
   ui.clearTransactionInput();
   ui.updateStatusBadge('Ready', 'success');
   window.currentTransaction = null;
+  window._isProcessingTransaction = false;
 
   // Update report immediately
   updateReport();
@@ -352,29 +364,92 @@ function handleReset() {
 /**
  * Handle done button
  */
-function handleDone() {
+async function handleDone() {
+  // PRIORITY 0: If there's input text but no classification displayed yet, process it first
+  const input = ui.getTransactionInput();
+  if (input.trim() && !window.currentTransaction && 
+      (!ui.elements.classificationDisplay || ui.elements.classificationDisplay.style.display === 'none')) {
+    // User has typed something but hasn't pressed Enter yet
+    // Process the transaction for them
+    await handleTransactionSubmit();
+    return; // After processing, classification will be shown and user can click Done again to confirm
+  }
+  
+  // PRIORITY 1: Handle Done button when classification is displayed
+  // This is the bug fix for modal-done-button-fix
+  if (window.currentTransaction && ui.elements.classificationDisplay && 
+      ui.elements.classificationDisplay.style.display !== 'none') {
+    
+    // Requirement 2.1: Display reasoning (already visible in classification display)
+    // The reasoning is already displayed in #classificationReasoning by showClassification()
+    // We just need to ensure it stays visible momentarily before clearing
+    
+    // Requirement 2.3: Confirm and save the transaction
+    const result = app.confirmTransaction(window.currentTransaction);
+    
+    if (result.error) {
+      ui.showError(result.error);
+      return;
+    }
+    
+    // Check if transaction needs offset suggestion
+    const offsetSuggestion = autoBalancer.suggestOffsetTransaction(
+      window.currentTransaction,
+      app.chartOfAccounts
+    );
+    
+    // Requirement 2.4: Show success message feedback
+    ui.showSuccess('✓ Transaction added to report');
+    
+    // Show offset suggestion if needed
+    if (offsetSuggestion && offsetSuggestion.accountCode !== window.currentTransaction.accountCode) {
+      const offsetMsg = `💡 Tip: Consider adding offset transaction:\n${offsetSuggestion.account} (${offsetSuggestion.accountCode})\nAmount: Rp ${(offsetSuggestion.totalAmount).toLocaleString('id-ID')}`;
+      console.log(offsetMsg);
+    }
+    
+    // Requirement 2.2: Clear/reset modal content (classification display)
+    ui.hideClassification();
+    ui.clearTransactionInput();
+    ui.updateStatusBadge('Ready', 'success');
+    window.currentTransaction = null;
+    window._isProcessingTransaction = false;
+    
+    // Update report immediately
+    updateReport();
+    updateUndoRedoButtons();
+    
+    // Focus back to input for next transaction
+    if (ui.elements.transactionInput) {
+      ui.elements.transactionInput.focus();
+    }
+    
+    return;
+  }
+  
+  // PRIORITY 2: Handle toggle between finalized and edit mode
   if (app.isFinalized) {
     // Return to edit mode
     app.returnToEditMode();
     ui.enableTransactionInput();
     ui.hideClassification();
     ui.clearTransactionInput();
+    window.currentTransaction = null;
+    window._isProcessingTransaction = false;
     ui.updateStatusBadge('Ready', 'success');
     ui.showSuccess('Returned to edit mode');
   } else {
-    // Finalize transactions
-    const result = app.finalizeTransactions();
-
-    if (!result.success) {
-      ui.showError(result.error);
+    // Finalize — cek balance, tampilkan ringkasan, tapi JANGAN disable input
+    // User tetap bisa input transaksi baru setelah Done
+    const verification = app.verifyAccountingEquation();
+    if (!verification.balanced) {
+      const selisih = Math.abs(verification.totalDebits - verification.totalCredits);
+      ui.showError(`Belum balance. Selisih: Rp ${selisih.toLocaleString('id-ID')}`);
       return;
     }
-
-    ui.hideClassification();
-    ui.clearTransactionInput();
-    ui.disableTransactionInput();
-    ui.updateStatusBadge('Finalized ✓', 'success');
-    ui.showSuccess('✓ Laporan difinalisasi. Klik "Edit" untuk input transaksi baru.');
+    app.isFinalized = true;
+    // Tidak disable input — user bisa terus input
+    ui.updateStatusBadge('✓ Balanced', 'success');
+    ui.showSuccess(`✓ Balanced! Total: Rp ${verification.totalDebits.toLocaleString('id-ID')}`);
   }
 }
 
@@ -556,7 +631,6 @@ function showAppInterface() {
       throw new Error('appSection element not found');
     }
     ui.showAppSection();
-    // Selalu enable input saat masuk app, kecuali period locked
     if (app.periodLocked) {
       ui.disableTransactionInput();
       ui.updateStatusBadge('Periode Dikunci 🔒', 'error');

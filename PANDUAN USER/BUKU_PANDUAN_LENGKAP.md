@@ -1178,7 +1178,7 @@ UTANG & PINJAMAN:
 Jurnal penutup adalah entri akuntansi yang dibuat **di akhir periode** untuk:
 
 1. Mengenolkan semua akun **nominal** (Pendapatan & Beban) agar siap untuk periode berikutnya
-2. Memindahkan laba/rugi bersih ke akun Modal
+ 2. Memindahkan laba/rugi bersih ke akun Modal
 3. Menutup akun Prive ke Modal
 4. Menghasilkan **Neraca Saldo Setelah Penutupan** yang hanya berisi akun riil
 

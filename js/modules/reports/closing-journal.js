@@ -33,7 +33,8 @@ function generateClosingJournal(transactions, chartOfAccounts, metadata) {
 
   // ── TAHAP A: Tutup Pendapatan (4xxx) → Ikhtisar L/R ─────────────────
   // calculateAccountBalances: pendapatan normal (4xxx) → saldo positif = kredit
-  // Kontra-pendapatan (4100, 4200) → saldo positif = debit (sudah benar)
+  // Kontra-pendapatan (4100 Retur Penjualan, 4200 Potongan Penjualan) → saldo positif = debit
+  // Untuk perusahaan dagang: 4000 Penjualan, 4100 Retur Penjualan, 4200 Potongan Penjualan
   const revenueEntries = [];
   let totalRevenue = 0;
 
@@ -66,7 +67,8 @@ function generateClosingJournal(transactions, chartOfAccounts, metadata) {
 
   // ── TAHAP B: Tutup Beban (5xxx) ← Ikhtisar L/R ──────────────────────
   // Beban normal (5xxx): saldo debit (positif) → tutup dengan kredit
-  // Kontra-beban (5020, 5030): saldo kredit (positif) → tutup dengan debit ke Ikhtisar
+  // Kontra-beban (5020 Retur Pembelian, 5030 Potongan Pembelian): saldo kredit → tutup dengan debit ke Ikhtisar
+  // Untuk perusahaan dagang: 5010 Pembelian, 5020 Retur, 5030 Potongan, 5040 Beban Angkut, 5050 HPP, dll
   const expenseEntries = [];
   let totalExpense = 0;
 

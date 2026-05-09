@@ -632,13 +632,67 @@ class AccountingCalculator {
       },
 
       // ══════════════════════════════════════════════════════════════════════
-      // PERSEDIAAN
+      // PERSEDIAAN BARANG DAGANGAN
       // ══════════════════════════════════════════════════════════════════════
+      // Pembelian persediaan tunai → Debit Persediaan (1200), Kredit Kas
       {
         keywords: ['barang', 'stok', 'inventory', 'persediaan', 'dagangan', 'beli_barang'],
         debit: '1200', credit: '1000',
-        reasoning: 'Pembelian persediaan: Persediaan bertambah (Debit), Kas berkurang (Kredit)',
+        reasoning: 'Pembelian persediaan: Persediaan Barang Dagangan (Aset) bertambah (Debit), Kas berkurang (Kredit)',
         confidence: 0.88
+      },
+      // Pembelian persediaan kredit → Debit Persediaan (1200), Kredit Utang Dagang
+      {
+        keywords: ['persediaan_kredit', 'beli_persediaan_kredit', 'stok_kredit'],
+        debit: '1200', credit: '2000',
+        reasoning: 'Pembelian persediaan kredit: Persediaan bertambah (Debit), Utang Dagang bertambah (Kredit)',
+        confidence: 0.95
+      },
+
+      // ══════════════════════════════════════════════════════════════════════
+      // HARGA POKOK PENJUALAN (HPP) — Pendekatan HPP
+      // Digunakan saat jurnal penyesuaian dengan metode HPP
+      // HPP = Persediaan Awal + Pembelian Bersih - Persediaan Akhir
+      // ══════════════════════════════════════════════════════════════════════
+      // Input HPP awal (debit HPP, kredit Persediaan Awal + Pembelian + Beban Angkut)
+      {
+        keywords: ['hpp', 'harga_pokok_penjualan', 'cost_of_goods', 'cogs'],
+        debit: '5050', credit: '1200',
+        reasoning: 'HPP: Harga Pokok Penjualan bertambah (Debit), Persediaan berkurang (Kredit)',
+        confidence: 0.97
+      },
+      // Persediaan akhir (debit Persediaan Akhir, kredit HPP)
+      {
+        keywords: ['persediaan_akhir', 'stok_akhir', 'saldo_persediaan_akhir'],
+        debit: '1200', credit: '5050',
+        reasoning: 'Persediaan akhir: Persediaan Akhir (Aset) bertambah (Debit), HPP berkurang (Kredit)',
+        confidence: 0.97
+      },
+      // Persediaan awal (debit Ikhtisar L/R, kredit Persediaan Awal) — metode Ikhtisar L/R
+      {
+        keywords: ['persediaan_awal', 'stok_awal', 'saldo_persediaan_awal'],
+        debit: '9000', credit: '1200',
+        reasoning: 'Persediaan awal: Ikhtisar Laba Rugi (Debit), Persediaan Awal berkurang (Kredit) — metode Ikhtisar L/R',
+        confidence: 0.97
+      },
+
+      // ══════════════════════════════════════════════════════════════════════
+      // TERMIN / DISKON OTOMATIS (2/10, n/30)
+      // Jika pelunasan ≤ 10 hari dari tanggal transaksi → diskon berlaku
+      // ══════════════════════════════════════════════════════════════════════
+      // Potongan penjualan (diskon ke pembeli yang bayar tepat waktu)
+      {
+        keywords: ['termin_jual', 'diskon_termin_jual', 'potongan_termin_penjualan'],
+        debit: '4200', credit: '1100',
+        reasoning: 'Potongan penjualan termin: Potongan Penjualan bertambah (Debit), Piutang Dagang berkurang (Kredit)',
+        confidence: 0.97
+      },
+      // Potongan pembelian (diskon dari supplier karena bayar tepat waktu)
+      {
+        keywords: ['termin_beli', 'diskon_termin_beli', 'potongan_termin_pembelian'],
+        debit: '2000', credit: '5030',
+        reasoning: 'Potongan pembelian termin: Utang Dagang berkurang (Debit), Potongan Pembelian bertambah (Kredit)',
+        confidence: 0.97
       }
     ];
 
@@ -676,6 +730,53 @@ class AccountingCalculator {
       accountType: result.debitAccount.type,
       debitCredit: 'debit',
       confidence: result.confidence
+    };
+  }
+
+  // ══════════════════════════════════════════════════════════════════════
+  // HARGA POKOK PENJUALAN (HPP)
+  // HPP = Persediaan Awal + Pembelian + Beban Angkut - Retur Pembelian
+  //       - Potongan Pembelian - Persediaan Akhir
+  // ══════════════════════════════════════════════════════════════════════
+  /**
+   * Hitung HPP dari saldo akun
+   * @param {object} balances - Saldo akun dari calculateAccountBalances
+   * @param {number} persediaanAkhir - Nilai persediaan akhir (dari data penyesuaian)
+   * @returns {object} { hpp, pembelianBersih, persediaanAwal }
+   */
+  calculateHPP(balances, persediaanAkhir = 0) {
+    const persediaanAwal  = Math.abs(balances['1200'] || 0);
+    const pembelian       = Math.abs(balances['5010'] || 0);
+    const bebanAngkut     = Math.abs(balances['5040'] || 0);
+    const returPembelian  = Math.abs(balances['5020'] || 0);
+    const potonganBeli    = Math.abs(balances['5030'] || 0);
+
+    const pembelianBersih = pembelian + bebanAngkut - returPembelian - potonganBeli;
+    const hpp = persediaanAwal + pembelianBersih - persediaanAkhir;
+
+    return { hpp: Math.max(0, hpp), pembelianBersih, persediaanAwal, persediaanAkhir };
+  }
+
+  // ══════════════════════════════════════════════════════════════════════
+  // TERMIN / DISKON OTOMATIS
+  // Syarat 2/10, n/30: diskon 2% jika bayar ≤ 10 hari dari tanggal faktur
+  // ══════════════════════════════════════════════════════════════════════
+  /**
+   * Cek apakah pembayaran masih dalam periode diskon
+   * @param {string} transactionDate - Tanggal transaksi asal (YYYY-MM-DD)
+   * @param {string} paymentDate - Tanggal pembayaran (YYYY-MM-DD)
+   * @param {number} discountDays - Batas hari diskon (default: 10)
+   * @param {number} discountRate - Persentase diskon (default: 0.02 = 2%)
+   * @returns {object} { eligible, discountRate, daysDiff }
+   */
+  checkTermin(transactionDate, paymentDate, discountDays = 10, discountRate = 0.02) {
+    const txDate  = new Date(transactionDate);
+    const payDate = new Date(paymentDate);
+    const daysDiff = Math.floor((payDate - txDate) / (1000 * 60 * 60 * 24));
+    return {
+      eligible:     daysDiff >= 0 && daysDiff <= discountDays,
+      discountRate: daysDiff <= discountDays ? discountRate : 0,
+      daysDiff
     };
   }
 }
