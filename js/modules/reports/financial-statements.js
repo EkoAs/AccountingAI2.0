@@ -20,6 +20,8 @@ function generateFinancialStatements(transactions, chartOfAccounts, metadata) {
   // ══════════════════════════════════════════════════════════════════
   // BAGIAN 1: LAPORAN LABA RUGI
   // Sumber: akun 4xxx (Pendapatan) dan 5xxx (Beban/HPP)
+  // HPP = (Persediaan Awal + Pembelian Bersih) - Persediaan Akhir
+  // Pembelian Bersih = Pembelian + Beban Angkut - Retur - Potongan
   // ══════════════════════════════════════════════════════════════════
   const revenues = [];
   const otherRevenues = [];
@@ -52,9 +54,15 @@ function generateFinancialStatements(transactions, chartOfAccounts, metadata) {
   const revenueDeduct = revenues.filter(r => r.isDeduction).reduce((s, r) => s + r.amount, 0);
   const netRevenue    = grossRevenue - revenueDeduct;
   const totalOtherRev = otherRevenues.reduce((s, r) => s + r.amount, 0);
-  const hppGross      = hpp.filter(h => !h.isDeduction).reduce((s, h) => s + h.amount, 0);
-  const hppDeduct     = hpp.filter(h => h.isDeduction).reduce((s, h) => s + h.amount, 0);
-  const netHpp        = hppGross - hppDeduct;
+  
+  // HPP Calculation with Inventory
+  const inventoryBegin = metadata.inventoryBeginning || 0;
+  const inventoryEnd   = metadata.inventoryEnding || 0;
+  const hppGross       = hpp.filter(h => !h.isDeduction).reduce((s, h) => s + h.amount, 0);
+  const hppDeduct      = hpp.filter(h => h.isDeduction).reduce((s, h) => s + h.amount, 0);
+  const netPurchases   = hppGross - hppDeduct;
+  const netHpp         = (inventoryBegin + netPurchases) - inventoryEnd;
+  
   const grossProfit   = netRevenue - netHpp;
   const totalExpenses = expenses.reduce((s, e) => s + e.amount, 0);
   const netIncome     = grossProfit - totalExpenses + totalOtherRev;
@@ -105,7 +113,7 @@ function generateFinancialStatements(transactions, chartOfAccounts, metadata) {
     incomeStatement: {
       revenues, revenueDeduct, grossRevenue, netRevenue,
       otherRevenues, totalOtherRev,
-      hpp, netHpp, grossProfit,
+      hpp, inventoryBegin, inventoryEnd, netPurchases, netHpp, grossProfit,
       expenses, totalExpenses,
       netIncome,
       isProfit: netIncome >= 0
@@ -172,12 +180,21 @@ function renderFinancialStatements(report, elements, formatCurrency) {
 
   if (is.hpp.length > 0) {
     html += `<tr class="fs-sub-header"><td colspan="3">HARGA POKOK PENJUALAN</td></tr>`;
+    if (is.inventoryBegin > 0) {
+      html += `<tr><td class="fs-indent">Persediaan Awal</td><td></td><td class="amount-debit">${fmt(is.inventoryBegin)}</td></tr>`;
+    }
     is.hpp.filter(h => !h.isDeduction).forEach(h => {
       html += `<tr><td class="fs-indent">${h.name}</td><td></td><td class="amount-debit">${fmt(h.amount)}</td></tr>`;
     });
     is.hpp.filter(h => h.isDeduction).forEach(h => {
       html += `<tr><td class="fs-indent">(−) ${h.name}</td><td></td><td class="amount-credit">(${fmt(h.amount)})</td></tr>`;
     });
+    if (is.netPurchases > 0) {
+      html += `<tr class="fs-subtotal"><td>Pembelian Bersih</td><td></td><td class="amount-debit">${fmt(is.netPurchases)}</td></tr>`;
+    }
+    if (is.inventoryEnd > 0) {
+      html += `<tr><td class="fs-indent">(−) Persediaan Akhir</td><td></td><td class="amount-credit">(${fmt(is.inventoryEnd)})</td></tr>`;
+    }
     html += `<tr class="fs-subtotal"><td>HPP Bersih</td><td></td><td class="amount-debit">(${fmt(is.netHpp)})</td></tr>`;
     html += `<tr class="fs-subtotal"><td><strong>Laba Kotor</strong></td><td></td><td class="amount-credit"><strong>${fmt(is.grossProfit)}</strong></td></tr>`;
   }
@@ -324,7 +341,16 @@ function pdfFinancialStatements(doc, data, y, helpers) {
   if (is.hpp.length > 0) {
     y = _spacer(y, 2);
     y = _subHeader('HARGA POKOK PENJUALAN', y);
+    if (is.inventoryBegin > 0) {
+      y = _row('Persediaan Awal', is.inventoryBegin, y);
+    }
     is.hpp.forEach(h => { y = _row(h.isDeduction ? `(−) ${h.name}` : h.name, h.amount, y, h.isDeduction); });
+    if (is.netPurchases > 0) {
+      y = _row('Pembelian Bersih', is.netPurchases, y, false, true, true);
+    }
+    if (is.inventoryEnd > 0) {
+      y = _row('(−) Persediaan Akhir', is.inventoryEnd, y, true);
+    }
     y = _row('HPP Bersih', is.netHpp, y, true, true, true);
     y = _row('Laba Kotor', is.grossProfit, y, false, true, true);
   }

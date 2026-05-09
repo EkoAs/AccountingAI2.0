@@ -108,6 +108,18 @@ class TransactionManager {
    */
   createTransaction(userId, transactionData) {
     try {
+      // Year consistency validation
+      const existingTxns = this.getTransactions(userId);
+      if (existingTxns.length > 0) {
+        const firstYear = new Date(existingTxns[0].date).getFullYear();
+        const newYear = new Date(transactionData.date).getFullYear();
+        
+        if (firstYear !== newYear) {
+          console.warn(`⚠️ Year mismatch: First transaction is ${firstYear}, new transaction is ${newYear}. Consider using consistent year for accurate reports.`);
+          // Note: This is a warning, not an error. User can still proceed.
+        }
+      }
+
       const transaction = {
         id: this.generateTransactionId(),
         date: transactionData.date,

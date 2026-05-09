@@ -13,7 +13,9 @@ class AccountingApp {
       organizationName: '',
       reportTitle: 'Accounting Report',
       preparer: '',
-      dateRange: ''
+      dateRange: '',
+      inventoryBeginning: 0,  // Persediaan Awal
+      inventoryEnding: 0       // Persediaan Akhir
     };
     this.isFinalized = false;
     this.undoStack = [];
@@ -155,7 +157,9 @@ class AccountingApp {
         organizationName: savedMeta.organizationName || '',
         reportTitle: savedMeta.reportTitle || 'Laporan Keuangan',
         preparer: savedMeta.preparer || '',
-        dateRange: ''
+        dateRange: '',
+        inventoryBeginning: savedMeta.inventoryBeginning || 0,
+        inventoryEnding: savedMeta.inventoryEnding || 0
       };
     } else {
       const profile = authManager.getUserProfile(this.currentUser);
@@ -164,7 +168,9 @@ class AccountingApp {
           organizationName: profile.organizationName || '',
           reportTitle: profile.reportTitle || 'Laporan Keuangan',
           preparer: profile.preparer || '',
-          dateRange: ''
+          dateRange: '',
+          inventoryBeginning: 0,
+          inventoryEnding: 0
         };
       }
     }

@@ -276,6 +276,16 @@
                     <label for="preparer">Preparer Name</label>
                     <input type="text" id="preparer" placeholder="Enter preparer name">
                 </div>
+                <div class="form-group">
+                    <label for="inventoryBeginning">Persediaan Awal (Rp)</label>
+                    <input type="number" id="inventoryBeginning" placeholder="0" min="0" step="1000">
+                    <small class="help-text">Nilai persediaan barang dagang di awal periode</small>
+                </div>
+                <div class="form-group">
+                    <label for="inventoryEnding">Persediaan Akhir (Rp)</label>
+                    <input type="number" id="inventoryEnding" placeholder="0" min="0" step="1000">
+                    <small class="help-text">Nilai persediaan barang dagang di akhir periode</small>
+                </div>
             </div>
             <div class="modal-footer">
                 <button class="btn-secondary" id="cancelSettingsBtn">Cancel</button>
@@ -301,28 +311,28 @@
     </div>
 
     <!-- Backend Modules -->
-    <script src="js/modules/storage.js?v=2"></script>
-    <script src="js/modules/auth.js?v=2"></script>
-    <script src="js/modules/transaction.js?v=2"></script>
-    <script src="js/modules/accounting.js?v=2"></script>
-    <script src="js/modules/ai-classifier.js?v=2"></script>
-    <script src="js/modules/auto-balancer.js?v=2"></script>
+    <script src="js/modules/storage.js?v=3"></script>
+    <script src="js/modules/auth.js?v=3"></script>
+    <script src="js/modules/transaction.js?v=3"></script>
+    <script src="js/modules/accounting.js?v=3"></script>
+    <script src="js/modules/ai-classifier.js?v=3"></script>
+    <script src="js/modules/auto-balancer.js?v=3"></script>
     <!-- Report Modules per Mode (harus sebelum report-generator & pdf-generator) -->
-    <script src="js/modules/reports/general-journal.js?v=2"></script>
-    <script src="js/modules/reports/general-ledger.js?v=2"></script>
-    <script src="js/modules/reports/trial-balance.js?v=2"></script>
-    <script src="js/modules/reports/reversing-journal.js?v=2"></script>
-    <script src="js/modules/reports/adjusting-entries.js?v=2"></script>
-    <script src="js/modules/reports/adjusted-trial-balance.js?v=2"></script>
-    <script src="js/modules/reports/financial-statements.js?v=2"></script>
-    <script src="js/modules/reports/closing-journal.js?v=2"></script>
+    <script src="js/modules/reports/general-journal.js?v=3"></script>
+    <script src="js/modules/reports/general-ledger.js?v=3"></script>
+    <script src="js/modules/reports/trial-balance.js?v=3"></script>
+    <script src="js/modules/reports/reversing-journal.js?v=3"></script>
+    <script src="js/modules/reports/adjusting-entries.js?v=3"></script>
+    <script src="js/modules/reports/adjusted-trial-balance.js?v=3"></script>
+    <script src="js/modules/reports/financial-statements.js?v=3"></script>
+    <script src="js/modules/reports/closing-journal.js?v=3"></script>
     <!-- Dispatcher Modules -->
-    <script src="js/modules/report-generator.js?v=2"></script>
-    <script src="js/modules/pdf-generator.js?v=2"></script>
-    <script src="js/app.js?v=2"></script>
+    <script src="js/modules/report-generator.js?v=3"></script>
+    <script src="js/modules/pdf-generator.js?v=3"></script>
+    <script src="js/app.js?v=3"></script>
 
     <!-- Frontend Scripts -->
-    <script src="js/ui.js?v=2"></script>
-    <script src="js/main.js?v=2"></script>
+    <script src="js/ui.js?v=3"></script>
+    <script src="js/main.js?v=3"></script>
 </body>
 </html>

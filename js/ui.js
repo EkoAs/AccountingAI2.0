@@ -53,6 +53,8 @@ class UIManager {
     this.elements.orgName = document.getElementById('orgName');
     this.elements.settingsReportTitle = document.getElementById('settingsReportTitle');
     this.elements.preparer = document.getElementById('preparer');
+    this.elements.inventoryBeginning = document.getElementById('inventoryBeginning');
+    this.elements.inventoryEnding = document.getElementById('inventoryEnding');
     this.elements.saveSettingsBtn = document.getElementById('saveSettingsBtn');
     this.elements.cancelSettingsBtn = document.getElementById('cancelSettingsBtn');
     this.elements.confirmModal = document.getElementById('confirmModal');
@@ -240,7 +242,9 @@ class UIManager {
     return {
       organizationName: this.elements.orgName.value,
       reportTitle: this.elements.settingsReportTitle ? this.elements.settingsReportTitle.value : '',
-      preparer: this.elements.preparer.value
+      preparer: this.elements.preparer.value,
+      inventoryBeginning: parseFloat(this.elements.inventoryBeginning.value) || 0,
+      inventoryEnding: parseFloat(this.elements.inventoryEnding.value) || 0
     };
   }
 
@@ -248,6 +252,8 @@ class UIManager {
     this.elements.orgName.value = data.organizationName || '';
     if (this.elements.settingsReportTitle) this.elements.settingsReportTitle.value = data.reportTitle || 'Accounting Report';
     this.elements.preparer.value = data.preparer || '';
+    this.elements.inventoryBeginning.value = data.inventoryBeginning || 0;
+    this.elements.inventoryEnding.value = data.inventoryEnding || 0;
   }
 
   showConfirmation(title, message, onConfirm) {

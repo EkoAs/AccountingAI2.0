@@ -69,6 +69,7 @@ function generateClosingJournal(transactions, chartOfAccounts, metadata) {
   // Beban normal (5xxx): saldo debit (positif) → tutup dengan kredit
   // Kontra-beban (5020 Retur Pembelian, 5030 Potongan Pembelian): saldo kredit → tutup dengan debit ke Ikhtisar
   // Untuk perusahaan dagang: 5010 Pembelian, 5020 Retur, 5030 Potongan, 5040 Beban Angkut, 5050 HPP, dll
+  // PLUS: Auto-close inventory (1200 Persediaan Barang Dagang)
   const expenseEntries = [];
   let totalExpense = 0;
 
@@ -89,14 +90,45 @@ function generateClosingJournal(transactions, chartOfAccounts, metadata) {
     }
   });
 
+  // Auto-close inventory: Tutup Persediaan Awal (1200) ke Ikhtisar L/R
+  const inventoryBegin = metadata.inventoryBeginning || 0;
+  const inventoryEnd   = metadata.inventoryEnding || 0;
+  
+  if (inventoryBegin > 0) {
+    // (D) Ikhtisar Laba Rugi | (K) Persediaan Barang Dagang (1200)
+    expenseEntries.push({ 
+      code: '1200', 
+      name: 'Persediaan Barang Dagang (Awal)', 
+      debit: 0, 
+      credit: inventoryBegin, 
+      isContra: false,
+      isInventory: true
+    });
+    totalExpense += inventoryBegin;
+    ikhtisarDebit += inventoryBegin;
+  }
+
   if (expenseEntries.length > 0) {
     // Ikhtisar L/R di atas (debit) untuk Tahap B — sesuai urutan jurnal standar
     const ikhtisarRowB = { code: IKHTISAR_CODE, name: IKHTISAR_NAME, debit: totalExpense, credit: 0 };
     entries.push({
-      tahap: 'B', label: 'Menutup Akun Beban',
+      tahap: 'B', label: 'Menutup Akun Beban & Persediaan Awal',
       ikhtisarRow: ikhtisarRowB,
       rows: expenseEntries
     });
+  }
+
+  // Tahap B2: Record Persediaan Akhir
+  // (D) Persediaan Barang Dagang (1200) | (K) Ikhtisar Laba Rugi
+  if (inventoryEnd > 0) {
+    entries.push({
+      tahap: 'B2', label: 'Mencatat Persediaan Akhir',
+      rows: [
+        { code: '1200', name: 'Persediaan Barang Dagang (Akhir)', debit: inventoryEnd, credit: 0, isInventory: true },
+        { code: IKHTISAR_CODE, name: IKHTISAR_NAME, debit: 0, credit: inventoryEnd }
+      ]
+    });
+    ikhtisarKredit += inventoryEnd;
   }
 
   // ── TAHAP C: Tutup Ikhtisar L/R → Modal ─────────────────────────────
@@ -236,7 +268,7 @@ function renderClosingJournal(report, elements, formatCurrency) {
   elements.tableHeader.innerHTML = '';
   const fmt = formatCurrency;
 
-  const tahapLabels = { A: '🔴', B: '🟠', C: '🟡', D: '🟢' };
+  const tahapLabels = { A: '🔴', B: '🟠', B2: '🟡', C: '🟢', D: '🔵' };
 
   let html = '';
 
@@ -254,7 +286,7 @@ function renderClosingJournal(report, elements, formatCurrency) {
     </tr>`;
 
     if (e.tahap === 'B') {
-      // Tahap B: Ikhtisar L/R (debit) di atas, beban (kredit) di bawah
+      // Tahap B: Ikhtisar L/R (debit) di atas, beban + inventory awal (kredit) di bawah
       if (e.ikhtisarRow) {
         const r = e.ikhtisarRow;
         html += `<tr>
@@ -264,8 +296,18 @@ function renderClosingJournal(report, elements, formatCurrency) {
         </tr>`;
       }
       (e.rows || []).forEach(r => {
+        const label = r.isInventory ? `${r.code} — ${r.name}` : `${r.code} — ${r.name}`;
         html += `<tr>
-          <td class="fs-indent" style="padding-left:2em">${r.code} — ${r.name}</td>
+          <td class="fs-indent" style="padding-left:2em">${label}</td>
+          <td class="text-right amount-debit">${r.debit  > 0 ? fmt(r.debit)  : '—'}</td>
+          <td class="text-right amount-credit">${r.credit > 0 ? fmt(r.credit) : '—'}</td>
+        </tr>`;
+      });
+    } else if (e.tahap === 'B2') {
+      // Tahap B2: Persediaan Akhir (debit) dan Ikhtisar (kredit)
+      (e.rows || []).forEach(r => {
+        html += `<tr>
+          <td class="fs-indent">${r.code} — ${r.name}</td>
           <td class="text-right amount-debit">${r.debit  > 0 ? fmt(r.debit)  : '—'}</td>
           <td class="text-right amount-credit">${r.credit > 0 ? fmt(r.credit) : '—'}</td>
         </tr>`;
@@ -395,13 +437,18 @@ function pdfClosingJournal(doc, data, y, helpers) {
     y = _subHeader(`Tahap ${e.tahap}: ${e.label}`, y);
 
     if (e.tahap === 'B') {
-      // Tahap B: Ikhtisar (debit) di atas, beban (kredit) di bawah
+      // Tahap B: Ikhtisar (debit) di atas, beban + inventory awal (kredit) di bawah
       if (e.ikhtisarRow) {
         const r = e.ikhtisarRow;
         y = _row(`  ${r.code} — ${r.name}`, r.debit || 0, r.credit || 0, y, false);
       }
       (e.rows || []).forEach(r => {
         y = _row(`    ${r.code} — ${r.name}`, r.debit || 0, r.credit || 0, y, false);
+      });
+    } else if (e.tahap === 'B2') {
+      // Tahap B2: Persediaan Akhir
+      (e.rows || []).forEach(r => {
+        y = _row(`  ${r.code} — ${r.name}`, r.debit || 0, r.credit || 0, y, false);
       });
     } else {
       // Tahap A, C, D: akun dulu, Ikhtisar/Modal di bawah

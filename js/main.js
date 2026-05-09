@@ -73,7 +73,9 @@ function setupEventListeners() {
         ui.setSettingsData({
           organizationName: app.metadata.organizationName || profile.organizationName || '',
           reportTitle: app.metadata.reportTitle || profile.reportTitle || 'Laporan Keuangan',
-          preparer: app.metadata.preparer || profile.preparer || ''
+          preparer: app.metadata.preparer || profile.preparer || '',
+          inventoryBeginning: app.metadata.inventoryBeginning || 0,
+          inventoryEnding: app.metadata.inventoryEnding || 0
         });
       });
     }
@@ -580,10 +582,18 @@ function handleSaveSettings() {
   app.metadata.organizationName = settings.organizationName;
   app.metadata.reportTitle = settings.reportTitle;
   app.metadata.preparer = settings.preparer;
+  app.metadata.inventoryBeginning = settings.inventoryBeginning;
+  app.metadata.inventoryEnding = settings.inventoryEnding;
   storageManager.saveData(app.currentUser, 'metadata', app.metadata);
 
   ui.hideSettingsModal();
   ui.showSuccess('Settings saved successfully');
+  
+  // Update report if currently viewing financial statements (HPP calculation depends on inventory)
+  const currentReport = ui.getSelectedReportType();
+  if (currentReport === 'financial-statements') {
+    updateReport();
+  }
 }
 
 /**
