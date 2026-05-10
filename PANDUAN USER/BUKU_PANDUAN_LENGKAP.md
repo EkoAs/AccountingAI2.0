@@ -1558,7 +1558,7 @@ Buku panduan ini mencakup seluruh aspek penggunaan Accounting Ledger System, mul
 Sistem ini dirancang untuk membantu pelaku usaha, mahasiswa akuntansi, dan profesional keuangan dalam mencatat transaksi secara akurat dan efisien dengan bantuan kecerdasan buatan.
 
 ```
-Accounting Ledger System v1.0.0
+Accounting Ledger System v2.0.0
 Dibuat oleh: Eko Asif
 Standar: PSAK (Pernyataan Standar Akuntansi Keuangan) Indonesia
 Lisensi: Untuk penggunaan pribadi dan edukasi
