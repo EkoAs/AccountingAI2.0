@@ -1,0 +1,339 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Automated Accounting Ledger System with AI-powered classification">
+    <title>Accounting By Eko Asif</title>
+    
+    <!-- CSS Files -->
+    
+    
+    
+    
+    <!-- External Libraries -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+  <link rel="stylesheet" href="/assets/index-10cd92c6.css">
+</head>
+<body>
+    <!-- Header -->
+    <header class="header">
+        <div class="header-container">
+            <div class="header-left">
+                <h1 class="logo">Accounting By Eko Asif</h1>
+            </div>
+            <div class="header-right">
+                <nav class="nav-menu">
+                    <button class="nav-btn" id="reportModeBtn">Report Mode</button>
+                    <button class="nav-btn" id="settingsBtn">Settings</button>
+                </nav>
+                <div class="user-info">
+                    <span id="userEmail" class="user-email"></span>
+                    <button class="btn-logout" id="logoutBtn">↩ Kembali</button>
+                </div>
+                <button class="hamburger" id="hamburgerBtn">
+                    <span></span>
+                    <span></span>
+                    <span></span>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Container -->
+    <div class="main-container">
+        <!-- Welcome Section (Initially Visible) -->
+        <div id="welcomeSection" class="welcome-section">
+            <div class="welcome-container">
+                <div class="welcome-card">
+                    <h2>Selamat Datang di Sistem Akuntansi</h2>
+                    <p class="welcome-subtitle">Automated Accounting Ledger System</p>
+                    
+                    <div class="welcome-content">
+                        <div class="welcome-intro">
+                            <h3>📋 Panduan Singkat</h3>
+                            <ul class="guide-list">
+                                <li><strong>Input Transaksi:</strong> Masukkan transaksi dalam format: nama_barang jumlah kuantitas tanggal</li>
+                                <li><strong>AI Classification:</strong> Sistem otomatis mengklasifikasi akun dan debit/kredit serta tabel</li>
+                                <li><strong>Laporan:</strong> Lihat General Journal, General Ledger, Trial Balance, dan Reversing Journal</li>
+                                <li><strong>Export:</strong> Unduh laporan dalam format PDF langsung atau JSON</li>
+                                <li><strong>System:</strong> Empat format dalam satu input data mentah</li>
+                            </ul>
+                        </div>
+
+                        <div class="welcome-form">
+                            <h3>🏢 Informasi Perusahaan</h3>
+                            <div class="form-group">
+                                <label for="companyName">Nama Perusahaan/Usaha</label>
+                                <input type="text" id="companyName" placeholder="Contoh: PT Maju Jaya" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="welcomeReportTitle">Judul Laporan</label>
+                                <input type="text" id="welcomeReportTitle" placeholder="Contoh: Laporan Keuangan 2025" value="Laporan Keuangan">
+                            </div>
+                            <div class="form-group">
+                                <label for="preparerName">Nama Penyusun</label>
+                                <input type="text" id="preparerName" placeholder="Nama Anda">
+                            </div>
+                            <button class="btn-primary" id="startBtn" onclick="handleStartApp()">Mulai Sekarang</button>
+                        </div>
+                    </div>
+
+                    <div class="welcome-features">
+                        <h3>✨ Fitur Utama</h3>
+                        <div class="features-grid">
+                            <div class="feature-item">
+                                <span class="feature-icon">🤖</span>
+                                <span class="feature-text">AI Classification</span>
+                            </div>
+                            <div class="feature-item">
+                                <span class="feature-icon">📊</span>
+                                <span class="feature-text">Multi-Report</span>
+                            </div>
+                            <div class="feature-item">
+                                <span class="feature-icon">⚖️</span>
+                                <span class="feature-text">Auto Balance</span>
+                            </div>
+                            <div class="feature-item">
+                                <span class="feature-icon">↩️</span>
+                                <span class="feature-text">Undo/Redo</span>
+                            </div>
+                            <div class="feature-item">
+                                <span class="feature-icon">📄</span>
+                                <span class="feature-text">PDF Export</span>
+                            </div>
+                            <div class="feature-item">
+                                <span class="feature-icon">💾</span>
+                                <span class="feature-text">Auto Save</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- App Section (Hidden Initially) -->
+        <div id="appSection" class="app-section" style="display: none;">
+            <div class="app-layout">
+
+                <!-- Input Panel — horizontal bar full width -->
+                <div class="input-panel">
+                    <div class="panel-header">
+                        <h3>Transaction Entry</h3>
+                        <span class="status-badge" id="statusBadge">Ready</span>
+                    </div>
+
+                    <div class="input-panel-row">
+                        <!-- Transaction Input -->
+                        <div class="input-group input-group-main">
+                            <label for="transactionInput">Enter Transaction</label>
+                            <input
+                                type="text"
+                                id="transactionInput"
+                                placeholder="Format: item_name amount quantity date (e.g., pulpen 3000 45 2025-01-15)"
+                                class="transaction-input"
+                            >
+                            <small class="help-text">Press Enter to submit or leave date empty for today</small>
+                        </div>
+
+                        <!-- Action Buttons -->
+                        <div class="action-buttons">
+                            <button class="btn-secondary" id="undoBtn" disabled>↶ Undo</button>
+                            <button class="btn-secondary" id="redoBtn" disabled>↷ Redo</button>
+                            <button class="btn-danger" id="resetBtn">🗑 Reset All</button>
+                            <button class="btn-primary" id="doneBtn">Done</button>
+                        </div>
+                    </div>
+
+                    <!-- AI Classification Display -->
+                    <div id="classificationDisplay" class="classification-display" style="display: none;">
+                        <div class="classification-header">
+                            <h4>AI Classification</h4>
+                            <span id="confidenceScore" class="confidence-badge"></span>
+                        </div>
+                        <div class="classification-content">
+                            <div class="classification-row">
+                                <label>Account:</label>
+                                <span id="classifiedAccount"></span>
+                            </div>
+                            <div class="classification-row">
+                                 <label>Type:</label>
+                                <span id="classifiedType"></span>
+                            </div>
+                            <div class="classification-row">
+                                <label>Debit/Credit:</label>
+                                <span id="classifiedDebitCredit"></span>
+                            </div>
+                            <div class="classification-row">
+                                <label>Total Amount:</label>
+                                <span id="classifiedAmount"></span>
+                            </div>
+                            <div class="classification-row">
+                                <label>Reasoning:</label>
+                                <span id="classificationReasoning" class="reasoning-text"></span>
+                            </div>
+                        </div>
+                        <div class="classification-actions">
+                            <button class="btn-secondary" id="adjustBtn">Adjust</button>
+                            <button class="btn-primary" id="confirmBtn">Confirm</button>
+                        </div>
+                    </div>
+
+                    <!-- Loading Indicator -->
+                    <div id="loadingIndicator" class="loading-indicator" style="display: none;">
+                        <div class="spinner"></div>
+                        <p>Processing transaction...</p>
+                    </div>
+
+                    <!-- Error Message -->
+                    <div id="errorMessage" class="error-message" style="display: none;"></div>
+
+                    <!-- Success Message -->
+                    <div id="successMessage" class="success-message" style="display: none;"></div>
+                </div><!-- end input-panel -->
+
+                <!-- Display Panel — full width di bawah -->
+                <div class="display-panel">
+                    <div class="panel-header">
+                        <h3>Accounting Reports</h3>
+                        <div class="report-selector">
+                            <select id="reportTypeSelect" class="report-select">
+                                <option value="general-journal">Jurnal Umum</option>
+                                <option value="general-ledger">Buku Besar</option>
+                                <option value="trial-balance">Neraca Saldo</option>
+                                <option value="reversing-journal">Jurnal Pembalik</option>
+                                <option value="adjusting-entries">Jurnal Penyesuaian</option>
+                                <option value="adjusted-trial-balance">Neraca Saldo Disesuaikan</option>
+                                <option value="financial-statements">Laporan Keuangan</option>
+                                <option value="closing-journal">Jurnal Penutup</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <!-- Report Summary -->
+                    <div class="report-summary">
+                        <div class="summary-item">
+                            <label id="labelTotalDebits">Total Debits:</label>
+                            <span id="totalDebits" class="amount">0</span>
+                        </div>
+                        <div class="summary-item">
+                            <label id="labelTotalCredits">Total Credits:</label>
+                            <span id="totalCredits" class="amount">0</span>
+                        </div>
+                        <div class="summary-item">
+                            <label>Status:</label>
+                            <span id="balanceStatus" class="status-indicator">Unbalanced</span>
+                        </div>
+                    </div>
+
+                    <!-- Report Table -->
+                    <div class="report-container">
+                        <table id="reportTable" class="report-table">
+                            <thead>
+                                <tr id="tableHeader"></tr>
+                            </thead>
+                            <tbody id="tableBody"></tbody>
+                        </table>
+                        <div id="emptyState" class="empty-state">
+                            <p>No transactions yet. Start by entering a transaction above.</p>
+                        </div>
+                    </div>
+
+                    <!-- Export Actions -->
+                    <div class="export-actions">
+                        <button class="btn-primary" id="generatePdfBtn" disabled>
+                            📄 Generate PDF
+                        </button>
+                        <button class="btn-secondary" id="exportDataBtn">
+                            ⬇ Export Data
+                        </button>
+                        <button class="btn-warning" id="closingJournalBtn" style="display:none">
+                            🔒 Eksekusi Jurnal Penutup
+                        </button>
+                    </div>
+                </div><!-- end display-panel -->
+
+            </div><!-- end app-layout -->
+        </div><!-- end appSection -->
+
+    <!-- Settings Modal -->
+    <div id="settingsModal" class="modal" style="display: none;">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Settings</h2>
+                <button class="modal-close" id="closeSettingsBtn">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label for="orgName">Organization Name</label>
+                    <input type="text" id="orgName" placeholder="Enter organization name">
+                </div>
+                <div class="form-group">
+                    <label for="settingsReportTitle">Report Title</label>
+                    <input type="text" id="settingsReportTitle" placeholder="Enter report title">
+                </div>
+                <div class="form-group">
+                    <label for="preparer">Preparer Name</label>
+                    <input type="text" id="preparer" placeholder="Enter preparer name">
+                </div>
+                <div class="form-group">
+                    <label for="inventoryBeginning">Persediaan Awal (Rp)</label>
+                    <input type="number" id="inventoryBeginning" placeholder="0" min="0" step="1000">
+                    <small class="help-text">Nilai persediaan barang dagang di awal periode</small>
+                </div>
+                <div class="form-group">
+                    <label for="inventoryEnding">Persediaan Akhir (Rp)</label>
+                    <input type="number" id="inventoryEnding" placeholder="0" min="0" step="1000">
+                    <small class="help-text">Nilai persediaan barang dagang di akhir periode</small>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn-secondary" id="cancelSettingsBtn">Cancel</button>
+                <button class="btn-primary" id="saveSettingsBtn">Save</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Confirmation Modal -->
+    <div id="confirmModal" class="modal" style="display: none;">
+        <div class="modal-content modal-small">
+            <div class="modal-header">
+                <h2 id="confirmTitle">Confirm Action</h2>
+            </div>
+            <div class="modal-body">
+                <p id="confirmMessage"></p>
+            </div>
+            <div class="modal-footer">
+                <button class="btn-secondary" id="confirmCancel">Cancel</button>
+                <button class="btn-primary" id="confirmOk">Confirm</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Backend Modules -->
+    <script src="js/modules/storage.js?v=3"></script>
+    <script src="js/modules/auth.js?v=3"></script>
+    <script src="js/modules/transaction.js?v=3"></script>
+    <script src="js/modules/accounting.js?v=3"></script>
+    <script src="js/modules/ai-classifier.js?v=3"></script>
+    <script src="js/modules/auto-balancer.js?v=3"></script>
+    <!-- Report Modules per Mode (harus sebelum report-generator & pdf-generator) -->
+    <script src="js/modules/reports/general-journal.js?v=3"></script>
+    <script src="js/modules/reports/general-ledger.js?v=3"></script>
+    <script src="js/modules/reports/trial-balance.js?v=3"></script>
+    <script src="js/modules/reports/reversing-journal.js?v=3"></script>
+    <script src="js/modules/reports/adjusting-entries.js?v=3"></script>
+    <script src="js/modules/reports/adjusted-trial-balance.js?v=3"></script>
+    <script src="js/modules/reports/financial-statements.js?v=3"></script>
+    <script src="js/modules/reports/closing-journal.js?v=3"></script>
+    <!-- Dispatcher Modules -->
+    <script src="js/modules/report-generator.js?v=3"></script>
+    <script src="js/modules/pdf-generator.js?v=3"></script>
+    <script src="js/app.js?v=3"></script>
+
+    <!-- Frontend Scripts -->
+    <script src="js/ui.js?v=3"></script>
+    <script src="js/main.js?v=3"></script>
+</body>
+</html>
