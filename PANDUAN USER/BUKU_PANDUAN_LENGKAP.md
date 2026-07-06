@@ -1568,3 +1568,152 @@ Lisensi: Untuk penggunaan pribadi dan edukasi
 
 *Dokumen ini diperbarui secara berkala sesuai perkembangan sistem.*
 *Untuk pertanyaan dan dukungan, buka GitHub Issues pada repositori proyek.*
+
+
+
+
+================== UBAH API AI =========================
+Baik, saya akan membantu mengidentifikasi di mana dan bagaimana API Gemini digunakan dalam kode kamu tanpa memodifikasi apa pun.
+
+Baik, saya sudah membaca kode kamu. Berikut penjelasan **di mana dan bagaimana** mengganti API dari Gemini ke AI lain:
+
+---
+
+## **Lokasi File yang Perlu Diubah**
+
+### **1. File Utama: `js/modules/ai-classifier.js`**
+Ini adalah file kunci yang mengelola seluruh integrasi API AI.
+
+**Bagian yang perlu diubah:**
+
+#### **A. API Endpoint (Line 9)**
+```javascript
+this.apiEndpoint = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent';
+```
+- Ganti URL ini dengan endpoint API AI baru kamu (misalnya OpenAI, Claude, atau AI lainnya)
+
+#### **B. Format Request Body (Line 336-349 dalam `callGeminiAPI`)**
+```javascript
+body: JSON.stringify({
+  contents: [{
+    parts: [{
+      text: prompt
+    }]
+  }]
+})
+```
+- Setiap AI punya format request berbeda
+- Contoh OpenAI menggunakan `messages` array, bukan `contents`
+
+#### **C. Parsing Response (Line 362-377)**
+```javascript
+const responseText = data.candidates[0].content.parts[0].text;
+```
+- Struktur response Gemini: `candidates[0].content.parts[0].text`
+- AI lain punya struktur berbeda (OpenAI: `choices[0].message.content`)
+
+#### **D. Authentication Method (Line 336)**
+```javascript
+const response = await fetch(`${this.apiEndpoint}?key=${this.apiKey}`, {
+```
+- Gemini menggunakan query parameter `?key=`
+- OpenAI menggunakan header: `Authorization: Bearer ${this.apiKey}`
+
+---
+
+### **2. File Konfigurasi: `.env.example` (Line 2)**
+```
+VITE_GEMINI_API_KEY=your_gemini_api_key_here
+```
+- Ganti nama environment variable sesuai AI baru (contoh: `VITE_OPENAI_API_KEY`)
+
+---
+
+### **3. File Inisialisasi: `js/main.js` (Line 666)**
+```javascript
+localStorage.setItem('gemini_api_key', apiKey);
+```
+- Ganti key localStorage sesuai AI baru (contoh: `openai_api_key`)
+
+---
+
+### **4. File App: `js/app.js` (Line 66)**
+Tidak perlu diubah karena hanya memanggil `initializeApiKey` dari `ai-classifier.js`
+
+---
+
+## **Struktur Perubahan Berdasarkan AI Provider**
+
+### **Jika Pakai OpenAI (GPT-4/GPT-3.5)**
+```javascript
+// 1. Endpoint
+this.apiEndpoint = 'https://api.openai.com/v1/chat/completions';
+
+// 2. Request format
+const response = await fetch(this.apiEndpoint, {
+  method: 'POST',
+  headers: {
+    'Content-Type': 'application/json',
+    'Authorization': `Bearer ${this.apiKey}`  // Beda dengan Gemini
+  },
+  body: JSON.stringify({
+    model: 'gpt-4',
+    messages: [{
+      role: 'user',
+      content: prompt
+    }]
+  })
+});
+
+// 3. Response parsing
+const responseText = data.choices[0].message.content;
+```
+
+### **Jika Pakai Claude (Anthropic)**
+```javascript
+// 1. Endpoint
+this.apiEndpoint = 'https://api.anthropic.com/v1/messages';
+
+// 2. Request format
+const response = await fetch(this.apiEndpoint, {
+  method: 'POST',
+  headers: {
+    'Content-Type': 'application/json',
+    'x-api-key': this.apiKey,
+    'anthropic-version': '2023-06-01'
+  },
+  body: JSON.stringify({
+    model: 'claude-3-opus-20240229',
+    max_tokens: 1024,
+    messages: [{
+      role: 'user',
+      content: prompt
+    }]
+  })
+});
+
+// 3. Response parsing
+const responseText = data.content[0].text;
+```
+
+---
+
+## **Ringkasan: Yang Harus Diubah**
+
+| **File** | **Bagian** | **Alasan** |
+|----------|-----------|-----------|
+| `js/modules/ai-classifier.js` | `this.apiEndpoint` (line 9) | URL API baru |
+| `js/modules/ai-classifier.js` | `callGeminiAPI()` method (line 335-407) | Format request & response berbeda |
+| `.env.example` | `VITE_GEMINI_API_KEY` (line 2) | Nama environment variable |
+| `js/main.js` | `localStorage.setItem('gemini_api_key', ...)` (line 666) | Nama key storage |
+
+---
+
+## **Catatan Penting**
+
+1. **Prompt tetap sama** - Prompt akuntansi PSAK di method `buildClassificationPrompt()` tidak perlu diubah, karena itu konten instruksi, bukan format API
+2. **Format JSON response** - Pastikan AI baru bisa mengembalikan JSON dengan struktur yang sama (debitAccount, creditAccount, confidence, reasoning)
+3. **Rate limiting** - Sesuaikan `this.requestLimit` (line 12) dengan limit API baru
+4. **Error handling** - Tambahkan handling khusus untuk error codes API baru
+
+Apakah kamu mau saya buatkan spec untuk migrasi ini, atau ada AI provider spesifik yang ingin kamu gunakan?
